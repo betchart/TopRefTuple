@@ -37,20 +37,19 @@ class TopRefPF2PAT(object) :
         self.eleID = 'mvaTrigV0'
         self.minEleID = 0.
         self.dBFactor = -0.5
-        self.cuts = {'el': ['pt>20.',
-                            'abs(eta)<2.5',
+        self.cuts = {'el': ['abs(eta)<2.5',
+                            'pt>20.',
                             'gsfTrackRef.isNonnull',
                             'gsfTrackRef.trackerExpectedHitsInner.numberOfLostHits<2',
-                            '(chargedHadronIso+max(0.,neutralHadronIso)+photonIso+%f*puChargedHadronIso)/et < %f'%(self.dBFactor, self.isoValues['el']),
+                            '(chargedHadronIso+max(0.,neutralHadronIso)+photonIso%+f*puChargedHadronIso)/et < %f'%(self.dBFactor, self.isoValues['el']),
                             'electronID("%s") > %f'%(self.eleID,self.minEleID),
                             ],
-                     'mu' :[#'(isGlobalMuon || isTrackerMuon)',                                               
-                            'pt>10.',                                                                      
-                            'abs(eta)<2.5',                                                                
+                     'mu' :['abs(eta)<2.5',
+                            'pt>10.',
                             '(chargedHadronIso+neutralHadronIso+photonIso%+f*puChargedHadronIso)/pt < %f'%(self.dBFactor, self.isoValues['mu']),
-                            'isPFMuon',                                                                      
+                            '(isPFMuon && (isGlobalMuon || isTrackerMuon) )',
                             ],
-                     'jet' : ['abs(eta) < 2.5', # Careful! these jet cuts affect the typeI met corrections
+                     'jet' : ['abs(eta)<2.5', # Careful! these jet cuts affect the typeI met corrections
                               'pt > 15.',
                               # PF jet ID:
                               'numberOfDaughters > 1',
@@ -97,8 +96,6 @@ class TopRefPF2PAT(object) :
         iso.deltaBetaFactor = self.dBFactor
         sel = self.attr('pfSelected'+full)
         sel.cut = ' && '.join(self.cuts[lep][:-2])
-        #sel.filter = cms.bool(True)
-        #iso.filter = cms.bool(True)
         print >>self.stdout, ""
         if lep == 'el' :
             idName = 'pfIdentifiedElectrons'+self.fix
