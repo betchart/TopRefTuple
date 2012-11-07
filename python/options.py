@@ -8,6 +8,7 @@ def options() :
     
     options.register('isData', default = True, mytype = VP.varType.bool)
     options.register('quiet', default = True, mytype = VP.varType.bool)
+    options.register('requireLepton', default = True, mytype = VP.varType.bool)
     options.register('globalTag', mytype = VP.varType.string )
     options.register('postfix','TR', mytype = VP.varType.string )
     options.parseArguments()
