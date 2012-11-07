@@ -1,0 +1,28 @@
+<use   name="FWCore/Framework"/>
+<use   name="CommonTools/UtilAlgos"/>
+<use   name="DataFormats/TrackReco"/>
+<use   name="DataFormats/TauReco"/>
+<use   name="DataFormats/L1GlobalTrigger"/>
+<use   name="DataFormats/ParticleFlowReco"/>
+<use   name="DataFormats/HcalDetId"/>
+<use   name="CondFormats/HcalObjects"/>
+<use   name="CalibCalorimetry/HcalAlgos"/>
+<use   name="RecoLocalCalo/HcalRecAlgos"/>
+<use   name="CondFormats/EcalObjects"/>
+<use   name="RecoLocalCalo/EcalRecAlgos"/>
+<use   name="Geometry/CaloGeometry"/>
+<use   name="CondFormats/L1TObjects"/>
+<use   name="CondFormats/DataRecord"/>
+<use   name="DataFormats/PatCandidates"/>
+<use   name="DataFormats/Luminosity"/>
+<use   name="HLTrigger/HLTcore"/>
+<use   name="RecoEgamma/EgammaTools"/>
+<use   name="RecoEcal/EgammaCoreTools"/>
+<use   name="MagneticField/Engine"/>
+<use   name="MagneticField/Records"/>
+<use   name="CalibCalorimetry/EcalTPGTools"/>
+<use   name="JetMETCorrections/Objects"/>
+<use   name="EGamma/EGammaAnalysisTools"/>
+<library   file="*.cc" name="TopQuarkAnalysisTopRefTuplePlugins">
+  <flags   EDM_PLUGIN="1"/>
+</library>
