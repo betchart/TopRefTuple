@@ -10,12 +10,13 @@ class TopRefPF2PAT(object) :
     '''Implement the Top Reference configuration of PF2PAT.
 
     https://twiki.cern.ch/twiki/bin/viewauth/CMS/TWikiTopRefEventSel
+    Modify the PF selections to match the PAT selections, for consistent TopProjection cross-cleaning.
     '''
 
     def __init__(self, process, options) :
         self.stdout = sys.stdout
         sys.stdout = open(os.devnull, 'w')
-        print >>self.stdout, "usePF2PAT() output suppressed."
+        print >>self.stdout, "usePF2PAT() output suppressed. (%s)"%__file__
 
         self.before = set(dir(process))
         process.load( "PhysicsTools.PatAlgos.patSequences_cff" )
@@ -32,6 +33,34 @@ class TopRefPF2PAT(object) :
         if options.isData: coreTools.runOnData( process, names = [ 'PFAll' ], postfix = options.postfix )
         coreTools.removeSpecificPATObjects( process, names = [ 'Photons', 'Taus' ], postfix = options.postfix )
 
+        self.isoValues = {'el':0.15,'mu':0.20}
+        self.eleID = 'mvaTrigV0'
+        self.minEleID = 0.
+        self.dBFactor = -0.5
+        self.cuts = {'el': ['pt>20.',
+                            'abs(eta)<2.5',
+                            'gsfTrackRef.isNonnull',
+                            'gsfTrackRef.trackerExpectedHitsInner.numberOfLostHits<2',
+                            '(chargedHadronIso+max(0.,neutralHadronIso)+photonIso+%f*puChargedHadronIso)/et < %f'%(self.dBFactor, self.isoValues['el']),
+                            'electronID("%s") > %f'%(self.eleID,self.minEleID),
+                            ],
+                     'mu' :[#'(isGlobalMuon || isTrackerMuon)',                                               
+                            'pt>10.',                                                                      
+                            'abs(eta)<2.5',                                                                
+                            '(chargedHadronIso+neutralHadronIso+photonIso%+f*puChargedHadronIso)/pt < %f'%(self.dBFactor, self.isoValues['mu']),
+                            'isPFMuon',                                                                      
+                            ],
+                     'jet' : ['abs(eta) < 2.5', # Careful! these jet cuts affect the typeI met corrections
+                              'pt > 15.',
+                              # PF jet ID:
+                              'numberOfDaughters > 1',
+                              'neutralHadronEnergyFraction < 0.99',
+                              'neutralEmEnergyFraction < 0.99',
+                              '(chargedEmEnergyFraction < 0.99   || abs(eta) >= 2.4)',
+                              '(chargedHadronEnergyFraction > 0. || abs(eta) >= 2.4)',
+                              '(chargedMultiplicity > 0          || abs(eta) >= 2.4)']
+                     }
+
         self.process = process
         self.options = options
         self.fix = options.postfix
@@ -45,37 +74,44 @@ class TopRefPF2PAT(object) :
         self.configPatMuons()
         self.configPatElectrons()
         self.configPatJets()
+        self.configLeptonFilter()
         self.removeCruft()
         sys.stdout = self.stdout
         
     def attr(self, item) : return getattr(self.process, item)
-    def show(self, item) : print >>self.stdout, item, '=', self.attr(item).dumpPython()
+    def show(self, item) : print >> (sys.stdout if self.options.quiet else self.stdout), item, '=', self.attr(item).dumpPython() if hasattr(self.process, item) else 'Not Found.'
 
     def configTopProjections(self) :
         '''Enable TopProjections except for Taus (do not remove tau cands from jet collection).'''
 
         for key,val in {'PileUp':1,'Muon':1,'Electron':1,'Jet':1,'Tau':0}.items() :
             self.attr('pfNo'+key+self.fix).enable = bool(val)
-
-        for lep in ['Muon','Electron'] :
-            sub = (lep,self.fix)
-            pfNo = self.attr('pfNo%s%s'%sub)
-            pfNo.topCollection = 'selectedPat%ss%s'%sub
-            mods = [ self.attr( item) for item in [ lep.lower() + 'Match'+self.fix,
-                                                    'pat%ss%s'%sub,
-                                                    'selectedPat%ss%s'%sub]][int(self.options.isData):]
-            for mod in mods : self.patSeq.remove(mod)
-            self.patSeq.replace( pfNo, reduce(operator.mul, mods) * pfNo )
-            pfNo.verbose = True
-            self.show('pfNo%s%s'%sub)
+        self.attr('pfNoElectron').verbose = True
         return
 
     def configPfLepton(self, lep, iso3) :
         full = {'el':'Electrons','mu':'Muons'}[lep] + self.fix
         iso = self.attr('pfIsolated'+full)
-        iso.isolationCut = 0.2
+        iso.isolationCut = self.isoValues[lep]
         iso.doDeltaBetaCorrection = True
-        iso.deltaBetaFactor = -0.5
+        iso.deltaBetaFactor = self.dBFactor
+        sel = self.attr('pfSelected'+full)
+        sel.cut = ' && '.join(self.cuts[lep][:-2])
+        #sel.filter = cms.bool(True)
+        #iso.filter = cms.bool(True)
+        print >>self.stdout, ""
+        if lep == 'el' :
+            idName = 'pfIdentifiedElectrons'+self.fix
+            id = cms.EDFilter("ElectronIDPFCandidateSelector",
+                              src = cms.InputTag('pfElectronsFromVertex'+self.fix),
+                              recoGsfElectrons = cms.InputTag("gsfElectrons"),
+                              electronIdMap = cms.InputTag(self.eleID),
+                              electronIdCut = cms.double(self.minEleID))
+            setattr(self.process, idName, id )
+            self.patSeq.replace( sel, id*sel)
+            sel.src = idName
+            self.show(idName)
+        
         if iso3:
             pf = {'el':'PFId','mu':''}[lep] + self.fix
             for item in ['pf','pfIsolated'] :
@@ -89,55 +125,50 @@ class TopRefPF2PAT(object) :
             val.pfPUChargedHadrons = tags( lep+'PFIsoValuePU03' + pf )
             val.pfPhotons          = tags( lep+'PFIsoValueGamma03' + pf )
             val.pfChargedHadrons   = tags( lep+'PFIsoValueCharged03' + pf )
+
+        self.show('pfSelected'+full)
+        self.show('pfIsolated'+full)
         return
 
     def configPatMuons(self) :
-        muonCuts = ['isPFMuon',                                                                      # general reconstruction property
-                    '(isGlobalMuon || isTrackerMuon)',                                               # general reconstruction property
-                    'pt > 10.',                                                                      # transverse momentum
-                    'abs(eta) < 2.5',                                                                # pseudo-rapisity range
-                    '(chargedHadronIso+neutralHadronIso+photonIso-0.5*puChargedHadronIso)/pt < 0.20']# relative isolation w/ Delta beta corrections (factor 0.5)
-
         for mod,attr,val in [('patMuons','usePV',False),     # use beam spot rather than PV, which is necessary for 'dB' cut
                              ('patMuons','embedTrack',True), # embedded track needed for muon ID cuts
-                             ('selectedPatMuons','cut', ' && '.join(muonCuts)),
+                             ('selectedPatMuons','cut', ' && '.join(self.cuts['mu'])),
                              ] : setattr( self.attr(mod+self.fix), attr, val )
         self.show('selectedPatMuons'+self.fix)
         return
 
     def configPatElectrons(self) :
-        electronIDSources = cms.PSet(**dict([(i,tags(i)) for i in ['mvaTrigV0','mvaNonTrigV0']]))
-        electronCuts = ['pt > 20.',                                                                              # transverse energy
-                        'abs(eta) < 2.5',                                                                        # pseudo-rapidity range
-                        'electronID("mvaTrigV0") > 0.',                                                          # MVA electrons ID
-                        '(chargedHadronIso+max(0.,neutralHadronIso)+photonIso-0.5*puChargedHadronIso)/et < 0.15']# relative isolation with Delta beta corrections
-
-        for mod,attr,val in [('patElectrons','electronIDSources',electronIDSources),
-                             ('selectedPatElectrons','cut', ' && '.join(electronCuts)),
+        electronIDSources = cms.PSet(**dict([(i,tags(i)) for i in [self.eleID]]))
+        for mod,attr,val in [('patElectrons','electronIDSources', electronIDSources),
+                             ('selectedPatElectrons','cut', ' && '.join(c for c in self.cuts['el'] if 'gsfTrackRef' not in c)),
                              ] : setattr( self.attr( mod+self.fix), attr, val )
         self.show('selectedPatElectrons'+self.fix)
         return
 
     def configPatJets(self) :
-        # Careful! these jet cuts affect the typeI met corrections
-        jetCuts = ['abs(eta) < 2.5',
-                   'pt > 15.',
-                   # PF jet ID:
-                   'numberOfDaughters > 1',
-                   'neutralHadronEnergyFraction < 0.99',
-                   'neutralEmEnergyFraction < 0.99',
-                   '(chargedEmEnergyFraction < 0.99   || abs(eta) >= 2.4)',
-                   '(chargedHadronEnergyFraction > 0. || abs(eta) >= 2.4)',
-                   '(chargedMultiplicity > 0          || abs(eta) >= 2.4)']
-
         for mod,attr,val in [('patJets','discriminatorSources',[tags(tag+'BJetTagsAOD'+self.fix) for tag in self.btags]),
                              ('patJets','tagInfoSources',[tags(tag+'TagInfosAOD'+self.fix) for tag in self.taginfos]),
                              ('patJets','addTagInfos',True),
-                             ('selectedPatJets','cut', ' && '.join(jetCuts)),
+                             ('selectedPatJets','cut', ' && '.join(self.cuts['jet'])),
                              ] : setattr( self.attr(mod+self.fix), attr, val )
         self.show('selectedPatJets'+self.fix)
         return
 
+    def configLeptonFilter(self) :
+        if not self.options.requireLepton : return
+        leptonsName = 'pfLeptons'+self.fix
+        requireLeptonName = 'requireLepton'+self.fix
+        leptons = cms.EDProducer("CandViewMerger", src = tags(['pfIsolated%s%s'%(lep,self.fix) for lep in ['Electrons','Muons']]))
+        requireLepton = cms.EDFilter("CandViewCountFilter", src = tags(leptonsName), minNumber = cms.uint32(1) )
+        setattr(self.process, leptonsName, leptons)
+        setattr(self.process, requireLeptonName, requireLepton)
+        
+        jets = self.attr('pfJets'+self.fix)
+        self.patSeq.replace(jets, leptons*requireLepton*jets)
+        self.show(leptonsName)
+        self.show(requireLeptonName)
+        return
 
     def removeCruft(self) :
         nothanks = [mod for mod in set(str(self.patSeq).split('+'))
