@@ -30,7 +30,10 @@ process.patreco = cms.Path( reduce(operator.add, [getattr(process, item) for ite
                                                                                       'eventCleaning',
                                                                                       'mvaTrigV0',
                                                                                       'patPF2PATSequence'+options.postfix]]))
-schedule = cms.Schedule( process.patreco )
+from TopQuarkAnalysis.TopRefTuple.tuple import Tuple
+process.tuple = Tuple(process, options).path()
+schedule = cms.Schedule( process.patreco,
+                         process.tuple )
 
 # dump config
 process.prune()
