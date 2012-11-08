@@ -8,6 +8,7 @@
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
+#include "fTypes.h"
 
 #include <map>
 
@@ -19,7 +20,7 @@ class Tuple_Gen : public edm::EDProducer {
   void produce(edm::Event &, const edm::EventSetup & );
   void produceGenJets(edm::Event &);
   static int index(const reco::Candidate*, const std::vector<const T*>&);
-  typedef reco::Candidate::LorentzVector LorentzVector;
+  typedef fTypes::dPolarLorentzV LorentzVector;
   const edm::InputTag inputTag;
   const std::vector<edm::InputTag> jetCollections;
   const std::string Prefix,Suffix;
@@ -39,14 +40,14 @@ Tuple_Gen(const edm::ParameterSet& conf)
   produces <unsigned int> (Prefix + "signalProcessID" + Suffix);
   produces <bool>   (Prefix + "GenInfoHandleValid" + Suffix);
   produces <bool >  (Prefix + "HandleValid" + Suffix);
-  produces <double> (Prefix + "pthat" + Suffix);
+  produces <float> (Prefix + "pthat" + Suffix);
   produces <int> (Prefix + "id1" + Suffix);
   produces <int> (Prefix + "id2" + Suffix);
-  produces <double> (Prefix + "x1" + Suffix);
-  produces <double> (Prefix + "x2" + Suffix);
-  produces <double> (Prefix + "pdf1" + Suffix);
-  produces <double> (Prefix + "pdf2" + Suffix);
-  produces <std::vector<double> > (Prefix + "BinningValues" + Suffix);
+  produces <float> (Prefix + "x1" + Suffix);
+  produces <float> (Prefix + "x2" + Suffix);
+  produces <float> (Prefix + "pdf1" + Suffix);
+  produces <float> (Prefix + "pdf2" + Suffix);
+  produces <std::vector<float> > (Prefix + "BinningValues" + Suffix);
   produces <float> (Prefix + "Q" + Suffix);
   produces <std::vector<LorentzVector> > ( Prefix + "P4"  + Suffix );
   produces <std::vector<int> > (Prefix + "PdgId" + Suffix);
@@ -77,15 +78,16 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   std::auto_ptr<float> Q (new float(geninfo->pdf()->scalePDF));
   std::auto_ptr<int> id1 (new int( geninfo->pdf()->id.first));
   std::auto_ptr<int> id2 (new int( geninfo->pdf()->id.second));
-  std::auto_ptr<double> x1 (new double( geninfo->pdf()->x.first));
-  std::auto_ptr<double> x2 (new double( geninfo->pdf()->x.second));
-  std::auto_ptr<double> pdf1 (new double( geninfo->pdf()->xPDF.first));
-  std::auto_ptr<double> pdf2 (new double( geninfo->pdf()->xPDF.second));
+  std::auto_ptr<float> x1 (new float( geninfo->pdf()->x.first));
+  std::auto_ptr<float> x2 (new float( geninfo->pdf()->x.second));
+  std::auto_ptr<float> pdf1 (new float( geninfo->pdf()->xPDF.first));
+  std::auto_ptr<float> pdf2 (new float( geninfo->pdf()->xPDF.second));
 
   std::auto_ptr<bool> handleValid ( new bool(collection.isValid()) );
   std::auto_ptr<bool> genInfoValid ( new bool( geninfo.isValid() && !geninfo->binningValues().empty()));
-  std::auto_ptr<double> pthat (new double(*genInfoValid ? geninfo->binningValues()[0] : -1.));
-  std::auto_ptr<std::vector<double> > binningValues (*genInfoValid ? new std::vector<double>(geninfo->binningValues()) : new std::vector<double>());
+  std::auto_ptr<float> pthat (new float(*genInfoValid ? geninfo->binningValues()[0] : -1.));
+  std::auto_ptr<std::vector<float> > binningValues (*genInfoValid ? new std::vector<float>(geninfo->binningValues().begin(),
+											   geninfo->binningValues().end()) : new std::vector<float>());
   std::auto_ptr<std::vector<LorentzVector> >  p4  ( new std::vector<LorentzVector>()  ) ;
   std::auto_ptr<std::vector<int> > status ( new std::vector<int>() ) ;
   std::auto_ptr<std::vector<int> > pdgId ( new std::vector<int>() ) ;
@@ -104,7 +106,7 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 	   || ( it->status() == 1    //        status 1 particles
 		&& it->pt() > GenStatus1PtCut) // above threshold
 	   ) {
-	p4->push_back(it->p4());
+	p4->push_back(LorentzVector(it->pt(),it->eta(),it->phi(),it->mass()));
 	status->push_back(it->status());
 	pdgId->push_back(it->pdgId());
 	motherPdgId->push_back( it->numberOfMothers() ? it->mother()->pdgId() : 0 );
@@ -145,7 +147,7 @@ produceGenJets(edm::Event& iEvent) {
     iEvent.getByLabel(jetCollections[i], genjets);
     if(genjets.isValid()) 
       for(edm::View<reco::GenJet>::const_iterator it(genjets->begin()), end(genjets->end()); it!=end; ++it) {
-	if (it->pt() >= GenJetPtCut) p4->push_back(it->p4());
+	if (it->pt() >= GenJetPtCut) p4->push_back(LorentzVector(it->pt(),it->eta(),it->phi(),it->mass()));
       }
     iEvent.put(p4, Prefix + jetCollections[i].label() + "P4" + Suffix);
   }
