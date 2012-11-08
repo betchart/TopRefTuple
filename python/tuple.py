@@ -32,7 +32,17 @@ class Tuple(object) :
                                                )
         return self.empty + self.process.tupleGen
 
+    def electron(self) :
+        self.process.tupleElectron = cms.EDProducer("Tuple_Electron",
+                                                    electronTag = cms.InputTag('selectedPatElectrons'+self.options.postfix),
+                                                    vertexTag = cms.InputTag('goodOfflinePrimaryVertices'),
+                                                    prefix = cms.string('el'),
+                                                    electronIDs = cms.vstring('mvaTrigV0')
+                                                    )
+        return self.empty + self.process.tupleElectron
+
     def path(self) :
         return cms.Path( self.events() *
                          self.gen() *
+                         self.electron() *
                          self.tree() )
