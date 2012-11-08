@@ -41,7 +41,7 @@ class TopRefPF2PAT(object) :
                             'pt>20.',
                             'gsfTrackRef.isNonnull',
                             'gsfTrackRef.trackerExpectedHitsInner.numberOfLostHits<2',
-                            '(chargedHadronIso+max(0.,neutralHadronIso)+photonIso%+f*puChargedHadronIso)/et < %f'%(self.dBFactor, self.isoValues['el']),
+                            '(chargedHadronIso+max(0.,neutralHadronIso+photonIso%+f*puChargedHadronIso))/pt < %f'%(self.dBFactor, self.isoValues['el']),
                             'electronID("%s") > %f'%(self.eleID,self.minEleID),
                             ],
                      'mu' :['abs(eta)<2.5',
