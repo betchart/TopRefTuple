@@ -39,7 +39,7 @@ class Tuple(object) :
                                                JetCollections = cms.VInputTag("ak5GenJetsNoNu"),
                                                Prefix = cms.string('gen'),
                                                Suffix = cms.string(''),
-                                               GenStatus1PtCut = cms.double(10.0),
+                                               GenStatus1PtCut = cms.double(1000.0),
                                                GenJetPtCut = cms.double(10.0),
                                                )
         self.process.tuplePileup = cms.EDProducer("Tuple_PileupSummary",
