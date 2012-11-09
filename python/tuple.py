@@ -30,7 +30,16 @@ class Tuple(object) :
                                                GenStatus1PtCut = cms.double(10.0),
                                                GenJetPtCut = cms.double(10.0),
                                                )
-        return self.empty + self.process.tupleGen
+        self.process.tuplePileup = cms.EDProducer("Tuple_PileupSummary",
+                                                  InputTag = cms.InputTag('addPileupInfo'),
+                                                  Prefix = cms.string('pileup'),
+                                                  Suffix = cms.string('')
+                                                  )
+        return self.empty + self.process.tupleGen + self.process.tuplePileup
+
+    def triggers(self) :
+        if not self.options.isData : return self.empty
+        return self.empty
 
     def electron(self) :
         self.process.tupleElectron = cms.EDProducer("Tuple_Electron",
@@ -44,5 +53,11 @@ class Tuple(object) :
     def path(self) :
         return cms.Path( self.events() *
                          self.gen() *
+                         self.triggers() *
                          self.electron() *
+                         #muon
+                         #jet
+                         #met
+                         #vertex
+                         #triggers
                          self.tree() )
