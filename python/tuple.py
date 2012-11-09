@@ -51,7 +51,11 @@ class Tuple(object) :
 
     def triggers(self) :
         if not self.options.isData : return self.empty
-        return self.empty
+        self.process.tupleTriggers = cms.EDProducer("Tuple_Triggers",
+                                                    InputTag = cms.InputTag('TriggerResults'),
+                                                    TriggerEventInputTag = cms.InputTag('hltTriggerSummaryAOD'),
+                                                    )
+        return self.empty + self.process.tupleTriggers
 
     def electron(self) :
         self.process.tupleElectron = cms.EDProducer("Tuple_Electron",
