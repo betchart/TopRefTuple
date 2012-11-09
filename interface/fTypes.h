@@ -16,7 +16,7 @@ struct fTypes {
   typedef ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<float> >  fVector;
   typedef ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > dVector;
   typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> >  fPolarLorentzV;
-  typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiE4D<double> > dPolarLorentzV;
+  typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > dPolarLorentzV;
   typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >     dXYZLorentzV;
 
   typedef std::map<std::string,       bool> mapStringBool;

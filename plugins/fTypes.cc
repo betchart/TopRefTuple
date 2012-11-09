@@ -19,8 +19,8 @@ std::map<std::string,fTypes::LEAFTYPE> fTypes::dict() {
   dict["doubleROOTMathPxPyPzE4DROOTMathLorentzVector"] = LORENTZVD;
   dict["doubleROOTMathPxPyPzE4DROOTMathLorentzVectors"] = LORENTZVD_V;
 
-  dict["doubleROOTMathPtEtaPhiE4DROOTMathLorentzVector"] = LORENTZVP;
-  dict["doubleROOTMathPtEtaPhiE4DROOTMathLorentzVectors"] = LORENTZVP_V;
+  dict["doubleROOTMathPtEtaPhiM4DROOTMathLorentzVector"] = LORENTZVP;
+  dict["doubleROOTMathPtEtaPhiM4DROOTMathLorentzVectors"] = LORENTZVP_V;
 
   dict["floatROOTMathPtEtaPhiM4DROOTMathLorentzVector"] = LORENTZVF;
   dict["floatROOTMathPtEtaPhiM4DROOTMathLorentzVectors"] = LORENTZVF_V;
