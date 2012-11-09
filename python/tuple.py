@@ -50,10 +50,17 @@ class Tuple(object) :
                                                     )
         return self.empty + self.process.tupleElectron
 
+
+    def muon(self) :
+        self.process.tupleMuon = cms.EDProducer("Tuple_Muon",
+                                                muonTag = cms.InputTag('selectedPatMuons'+self.options.postfix),
+                                                prefix = cms.string('mu') )
+        return self.empty + self.process.tupleMuon
+        
     def path(self) :
         return cms.Path( self.events() *
                          self.gen() *
-                         self.triggers() *
+                         self.triggers() * # FIXME
                          self.electron() *
                          #muon
                          #jet

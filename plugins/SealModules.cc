@@ -22,7 +22,6 @@
 
 typedef Tuple_MET<pat::MET> Tuple_PatMET;
 typedef Tuple_Jet<pat::Jet> Tuple_PatJet;
-typedef Tuple_Muon<pat::Muon> Tuple_PatMuon;
 typedef Tuple_Gen<reco::GenParticle> Tuple_GenParticle;
 
 DEFINE_FWK_MODULE(MakeTree);
@@ -33,7 +32,7 @@ DEFINE_FWK_MODULE(Tuple_PatMET);
 //DEFINE_FWK_MODULE(Tuple_SumP4);
 DEFINE_FWK_MODULE(Tuple_PatJet);
 DEFINE_FWK_MODULE(Tuple_Electron);
-DEFINE_FWK_MODULE(Tuple_PatMuon);
+DEFINE_FWK_MODULE(Tuple_Muon);
 //DEFINE_FWK_MODULE(Tuple_BeamSpot);
 //DEFINE_FWK_MODULE(Tuple_BeamHaloSummary);
 //DEFINE_FWK_MODULE(Tuple_LogError);

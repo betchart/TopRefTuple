@@ -1,41 +1,64 @@
 #include "TopQuarkAnalysis/TopRefTuple/interface/Tuple_Muon.h"
+#include "TopQuarkAnalysis/TopRefTuple/interface/fTypes.h"
+
+#include <boost/foreach.hpp>
+
+#include "DataFormats/PatCandidates/interface/Muon.h"
+//#include "DataFormats/VertexReco/interface/VertexFwd.h"
+//#include "DataFormats/VertexReco/interface/Vertex.h"
 
 
-// init method in case of RECO data
-template<>
-void Tuple_Muon<reco::Muon>::initTemplate() { initRECO(); }
-
-// init method in case of PAT data
-template<>
-void Tuple_Muon<pat::Muon>::initTemplate()  { initRECO(); initPAT(); }
-
-// produce method in case of RECO data
-template<>
-void Tuple_Muon<reco::Muon>::produceTemplate(edm::Event& iEvent, const edm::EventSetup& iSetup, edm::Handle<std::vector<reco::Muon> >& collection)
+Tuple_Muon::
+Tuple_Muon(const edm::ParameterSet& conf) 
+  : muonTag( conf.getParameter<edm::InputTag>("muonTag") ),
+    prefix( conf.getParameter<std::string>("prefix") )
 {
-  produceRECO(iEvent, iSetup, collection);
+  produces <bool> (  prefix + "HandleValid");
+  produces <std::vector<fTypes::dPolarLorentzV> > ( prefix + "P4" );
+  produces <std::vector<int> > (  prefix + "Charge");
+
+  produces <std::vector<float> > ( prefix + "RelIso" );
+  produces <std::vector<float> > ( prefix + "ChIso" );
+  produces <std::vector<float> > ( prefix + "NhIso" );
+  produces <std::vector<float> > ( prefix + "PhIso" );
+  produces <std::vector<float> > ( prefix + "PuIso" );
+
 }
 
-// produce method in case of PAT data
-template<>
-void Tuple_Muon<pat::Muon>::produceTemplate(edm::Event& iEvent, const edm::EventSetup& iSetup, edm::Handle<std::vector<pat::Muon> >& collection)
-{
-  produceRECO(iEvent, iSetup, collection);
-  producePAT(iEvent, iSetup, collection);
-}
+void Tuple_Muon::
+produce(edm::Event &event, const edm::EventSetup&) {
+  std::auto_ptr<std::vector<fTypes::dPolarLorentzV> > p4 ( new std::vector<fTypes::dPolarLorentzV>() );
+  std::auto_ptr<std::vector<int> >           charge ( new std::vector<int>() );
 
-template<class T>
-bool Tuple_Muon<T>::isInCollection(const T& e, const std::vector<T>& ve) {
-  typename std::vector<T>::const_iterator it(ve.begin()),end(ve.end());
-  for(;it!=end;++it)
-    if( e.p4() == it->p4() ) return true;
-  return false;
-}
+  std::auto_ptr<std::vector<float> > relIso( new std::vector<float>() );
+  std::auto_ptr<std::vector<float> > chIso ( new std::vector<float>() );
+  std::auto_ptr<std::vector<float> > nhIso ( new std::vector<float>() );
+  std::auto_ptr<std::vector<float> > phIso ( new std::vector<float>() );
+  std::auto_ptr<std::vector<float> > puIso ( new std::vector<float>() );
 
+  typedef edm::View<pat::Muon> mus_t;
+  edm::Handle<mus_t> muons;
+  event.getByLabel(muonTag,muons);
 
+  if( muons.isValid() ) {
+    for(mus_t::const_iterator mu=muons->begin(); mu!=muons->end(); mu++) {
+      p4->push_back(fTypes::dPolarLorentzV(mu->pt(), mu->eta(), mu->phi(), mu->mass()));
+      charge->push_back(mu->charge());
+      chIso->push_back( mu->chargedHadronIso() );
+      nhIso->push_back( mu->neutralHadronIso() );
+      phIso->push_back( mu->photonIso() );
+      puIso->push_back( mu->puChargedHadronIso() );
+      relIso->push_back( (chIso->back() + std::max(0., nhIso->back()+phIso->back()-0.5*puIso->back()) ) / mu->pt() );
+      
+    }
+  }
 
-template<class T>
-reco::Candidate::LorentzVector Tuple_Muon<T>::muonP4FromP(const reco::Candidate::Vector & p) {
-  double E = sqrt(pow(p.r(),2) + pow(0.105,2));
-  return reco::Candidate::LorentzVector(p.x(),p.y(),p.z(),E);
+  event.put( std::auto_ptr<bool> ( new bool(muons.isValid() ) ), prefix + "HandleValid" );
+  event.put( p4, prefix+"P4" );
+  event.put( charge, prefix+"Charge");
+  event.put( relIso, prefix+"RelIso");
+  event.put( chIso, prefix+"ChIso");
+  event.put( nhIso, prefix+"NhIso");
+  event.put( phIso, prefix+"PhIso");
+  event.put( puIso, prefix+"PuIso");
 }
