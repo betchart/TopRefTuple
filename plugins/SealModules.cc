@@ -4,7 +4,7 @@
 #include "DataFormats/PatCandidates/interface/Muon.h"
 #include "DataFormats/PatCandidates/interface/Electron.h"
 
-#include "TopQuarkAnalysis/TopRefTuple/interface/MakeTree.h"
+#include "TopQuarkAnalysis/TopRefTuple/interface/TreeMaker.h"
 #include "TopQuarkAnalysis/TopRefTuple/interface/Tuple_Event.h"
 #include "TopQuarkAnalysis/TopRefTuple/interface/Tuple_Triggers.h"
 //#include "TopQuarkAnalysis/TopRefTuple/interface/Tuple_L1Triggers.h"
@@ -24,7 +24,7 @@ typedef Tuple_MET<pat::MET> Tuple_PatMET;
 typedef Tuple_Jet<pat::Jet> Tuple_PatJet;
 typedef Tuple_Gen<reco::GenParticle> Tuple_GenParticle;
 
-DEFINE_FWK_MODULE(MakeTree);
+DEFINE_FWK_MODULE(TreeMaker);
 DEFINE_FWK_MODULE(Tuple_Event);
 DEFINE_FWK_MODULE(Tuple_Triggers);
 //DEFINE_FWK_MODULE(Tuple_L1Triggers);

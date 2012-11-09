@@ -1,4 +1,4 @@
-#include "TopQuarkAnalysis/TopRefTuple/interface/MakeTree.h"
+#include "TopQuarkAnalysis/TopRefTuple/interface/TreeMaker.h"
 #include "TopQuarkAnalysis/TopRefTuple/interface/fTypes.h"
 
 #include "FWCore/Framework/interface/ConstProductRegistry.h" 
@@ -8,7 +8,7 @@
 
 #include "boost/foreach.hpp"
 
-void MakeTree::
+void TreeMaker::
 analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   BOOST_FOREACH( BranchConnector* connector, connectors)
     connector->connect(iEvent);
@@ -16,7 +16,7 @@ analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
 }
 
 template <class T>
-void MakeTree::TypedBranchConnector<T>::
+void TreeMaker::TypedBranchConnector<T>::
 connect(const edm::Event& iEvent) {
   edm::Handle<T> handle_;
   iEvent.getByLabel(ml, pin, handle_);
@@ -24,7 +24,7 @@ connect(const edm::Event& iEvent) {
 }
 
 template <class T> 
-MakeTree::TypedBranchConnector<T>::
+TreeMaker::TypedBranchConnector<T>::
 TypedBranchConnector(edm::BranchDescription const* desc, 
 		     std::string t, 
 		     TTree * tree)
@@ -37,13 +37,13 @@ TypedBranchConnector(edm::BranchDescription const* desc,
   else       { tree->Branch( name.c_str(), &object_ptr_                   );}  //vector<type>
 }
 
-void MakeTree::
+void TreeMaker::
 beginJob() {
   tree = fs->make<TTree>("tree", ""); 
 
   edm::Service<edm::ConstProductRegistry> reg;
   edm::Selections allBranches = reg->allBranchDescriptions();
-  edm::GroupSelectorRules groupSelectorRules_(pset, "outputCommands", "MakeTree");
+  edm::GroupSelectorRules groupSelectorRules_(pset, "outputCommands", "TreeMaker");
   edm::GroupSelector groupSelector_;
   groupSelector_.initialize(groupSelectorRules_, allBranches);
 
@@ -57,11 +57,11 @@ beginJob() {
       if (branchnames.find(name) != branchnames.end() )
 	throw edm::Exception(edm::errors::Configuration)
 	  << "More than one branch named: " << name << std::endl
-	  << "Exception thrown from MakeTree::beginJob" << std::endl;
+	  << "Exception thrown from TreeMaker::beginJob" << std::endl;
       else 
 	branchnames.insert( selection->productInstanceName() );
       
-      //Create MakeTree branch
+      //Create TreeMaker branch
       switch(dict.find( selection->friendlyClassName() )->second) {
 #define EXPAND(enumT,typeT,charT) case fTypes::enumT : connectors.push_back( new TypedBranchConnector<typeT >(selection,charT,tree)); break
 	EXPAND(   BOOL,           bool, "/O");
@@ -113,14 +113,14 @@ beginJob() {
 	    leafstring+= "\t" + leaf.first + "\n";
 
 	  throw edm::Exception(edm::errors::Configuration)
-	    << "class MakeTree does not handle leaves of type " << selection->className() << " like\n"
+	    << "class TreeMaker does not handle leaves of type " << selection->className() << " like\n"
 	    <<   selection->friendlyClassName()   << "_" 
 	    <<   selection->moduleLabel()         << "_" 
 	    <<   selection->productInstanceName() << "_"  
 	    <<   selection->processName()         << std::endl
 	    << "Valid leaf types are (friendlyClassName):\n"
 	    <<   leafstring
-	    << "Exception thrown from MakeTree::beginJob\n";
+	    << "Exception thrown from TreeMaker::beginJob\n";
 	}
       }
     }

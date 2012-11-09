@@ -154,15 +154,22 @@ class TopRefPF2PAT(object) :
 
     def configLeptonFilter(self) :
         if not self.options.requireLepton : return
+        muons20Name = 'pfIsolatedMuons20'+self.fix
         leptonsName = 'pfLeptons'+self.fix
         requireLeptonName = 'requireLepton'+self.fix
-        leptons = cms.EDProducer("CandViewMerger", src = tags(['pfIsolated%s%s'%(lep,self.fix) for lep in ['Electrons','Muons']]))
+
+        muons20 = cms.EDFilter("GenericPFCandidateSelector", src = tags('pfIsolatedMuons'+self.fix), cut = cms.string('pt>20 && abs(eta) < 2.4'))
+        leptons = cms.EDProducer("CandViewMerger", src = tags(['pfIsolated%s%s'%(lep,self.fix) for lep in ['Electrons','Muons20']]))
         requireLepton = cms.EDFilter("CandViewCountFilter", src = tags(leptonsName), minNumber = cms.uint32(1) )
+
+        setattr(self.process, muons20Name, muons20)
         setattr(self.process, leptonsName, leptons)
         setattr(self.process, requireLeptonName, requireLepton)
         
         jets = self.attr('pfJets'+self.fix)
-        self.patSeq.replace(jets, leptons*requireLepton*jets)
+        self.patSeq.replace(jets, muons20*leptons*requireLepton*jets)
+
+        self.show(muons20Name)
         self.show(leptonsName)
         self.show(requireLeptonName)
         return

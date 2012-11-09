@@ -1,7 +1,7 @@
-#ifndef Make_Tree_h
-#define Make_Tree_h
+#ifndef TREEMAKER_H
+#define TREEMAKER_H
 
-/** \class MakeTree
+/** \class TreeMaker
  * 
  *  Makes a tree out of C++ standard types and vectors of C++ standard types
  *
@@ -10,8 +10,8 @@
  *  tree of the selected variables, which it obtains from the EDM
  *  tree.  
  *
- *  $Date: 2011/01/13 15:33:17 $
- *  $Revision: 1.13 $
+ *  $Date: 2012/11/07 21:53:09 $
+ *  $Revision: 1.1 $
  *  \author Burt Betchart - University of Rochester <burton.andrew.betchart@cern.ch>
  */
 
@@ -26,7 +26,7 @@
 #include <vector>
 #include <TTree.h>
 
-class MakeTree : public edm::EDAnalyzer {
+class TreeMaker : public edm::EDAnalyzer {
 private:    
   virtual void beginJob();
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
@@ -56,7 +56,7 @@ private:
   edm::ParameterSet pset;
 
 public:
-  explicit MakeTree(const edm::ParameterSet& iConfig) : pset(iConfig) {}
+  explicit TreeMaker(const edm::ParameterSet& iConfig) : pset(iConfig) {}
 };
 
 #endif

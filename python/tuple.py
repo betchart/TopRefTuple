@@ -8,10 +8,22 @@ class Tuple(object) :
         self.options = options
         self.empty = process.empty = cms.Sequence()
                 
+    def path(self) :
+        return cms.Path( self.events() *
+                         self.gen() *
+                         self.triggers() * # FIXME
+                         self.electron() *
+                         self.muon() *
+                         #jet
+                         #met
+                         #vertex
+                         #triggers
+                         self.tree() )
+
     def attr(self, item) : return getattr(self.process, item)
 
     def tree(self) :
-        self.process.topRef = cms.EDAnalyzer( "MakeTree", outputCommands = cms.untracked.vstring(
+        self.process.topRef = cms.EDAnalyzer( "TreeMaker", outputCommands = cms.untracked.vstring(
             'drop *',
             'keep *_tuple*_*_*',) )
         return self.process.topRef
@@ -57,14 +69,3 @@ class Tuple(object) :
                                                 prefix = cms.string('mu') )
         return self.empty + self.process.tupleMuon
         
-    def path(self) :
-        return cms.Path( self.events() *
-                         self.gen() *
-                         self.triggers() * # FIXME
-                         self.electron() *
-                         #muon
-                         #jet
-                         #met
-                         #vertex
-                         #triggers
-                         self.tree() )
