@@ -76,7 +76,7 @@ produce(edm::Event &event, const edm::EventSetup&) {
       
       scEta->push_back( el->superCluster()->eta() );
       passCV->push_back( el->passConversionVeto() );
-      dxy->push_back( vertex? el->gsfTrack()->dxy(vertex->position()) : -9999.9 );
+      dxy->push_back( vertex? fabs( el->gsfTrack()->dxy(vertex->position()) ) : -9999.9 );
       nHits->push_back( el->gsfTrack()->trackerExpectedHitsInner().numberOfHits() );
       
       BOOST_FOREACH(const std::string& idName, electronIDs) {
