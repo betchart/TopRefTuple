@@ -66,6 +66,7 @@ class Tuple(object) :
     def muon(self) :
         self.process.tupleMuon = cms.EDProducer("Tuple_Muon",
                                                 muonTag = cms.InputTag('selectedPatMuons'+self.options.postfix),
+                                                vertexTag = cms.InputTag('goodOfflinePrimaryVertices'),
                                                 prefix = cms.string('mu') )
         return self.empty + self.process.tupleMuon
         

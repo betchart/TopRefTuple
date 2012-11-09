@@ -15,7 +15,7 @@ class Tuple_Muon : public edm::EDProducer {
  private:
   void produce(edm::Event &, const edm::EventSetup & );
 
-  const edm::InputTag muonTag;
+  const edm::InputTag muonTag,vertexTag;
   const std::string prefix;
 };
 
