@@ -1,6 +1,10 @@
 import operator
 from FWCore.ParameterSet import Config as cms
 
+def tags(stuff) :
+    return ( cms.InputTag(stuff) if type(stuff)!=list else
+             cms.VInputTag([tags(item) for item in stuff]) )
+
 class Tuple(object) :
 
     def __init__(self,process,options) :
@@ -11,13 +15,12 @@ class Tuple(object) :
     def path(self) :
         return cms.Path( self.events() *
                          self.gen() *
-                         self.triggers() * # FIXME
+                         self.triggers() *
                          self.electron() *
                          self.muon() *
+                         self.met() *
                          #jet
-                         #met
                          #vertex
-                         #triggers
                          self.tree() )
 
     def attr(self, item) : return getattr(self.process, item)
@@ -35,15 +38,15 @@ class Tuple(object) :
     def gen(self) :
         if self.options.isData : return self.empty
         self.process.tupleGen = cms.EDProducer("Tuple_GenParticle",
-                                               InputTag = cms.InputTag('genParticles'),
-                                               JetCollections = cms.VInputTag("ak5GenJetsNoNu"),
+                                               InputTag = tags('genParticles'),
+                                               JetCollections = tags(["ak5GenJetsNoNu"]),
                                                Prefix = cms.string('gen'),
                                                Suffix = cms.string(''),
                                                GenStatus1PtCut = cms.double(1000.0),
                                                GenJetPtCut = cms.double(10.0),
                                                )
         self.process.tuplePileup = cms.EDProducer("Tuple_PileupSummary",
-                                                  InputTag = cms.InputTag('addPileupInfo'),
+                                                  InputTag = tags('addPileupInfo'),
                                                   Prefix = cms.string('pileup'),
                                                   Suffix = cms.string('')
                                                   )
@@ -52,15 +55,15 @@ class Tuple(object) :
     def triggers(self) :
         if not self.options.isData : return self.empty
         self.process.tupleTriggers = cms.EDProducer("Tuple_Triggers",
-                                                    InputTag = cms.InputTag('TriggerResults'),
-                                                    TriggerEventInputTag = cms.InputTag('hltTriggerSummaryAOD'),
+                                                    InputTag = tags('TriggerResults'),
+                                                    TriggerEventInputTag = tags('hltTriggerSummaryAOD'),
                                                     )
         return self.empty + self.process.tupleTriggers
 
     def electron(self) :
         self.process.tupleElectron = cms.EDProducer("Tuple_Electron",
-                                                    electronTag = cms.InputTag('selectedPatElectrons'+self.options.postfix),
-                                                    vertexTag = cms.InputTag('goodOfflinePrimaryVertices'),
+                                                    electronTag = tags('selectedPatElectrons'+self.options.postfix),
+                                                    vertexTag = tags('goodOfflinePrimaryVertices'),
                                                     prefix = cms.string('el'),
                                                     electronIDs = cms.vstring('mvaTrigV0')
                                                     )
@@ -69,8 +72,16 @@ class Tuple(object) :
 
     def muon(self) :
         self.process.tupleMuon = cms.EDProducer("Tuple_Muon",
-                                                muonTag = cms.InputTag('selectedPatMuons'+self.options.postfix),
-                                                vertexTag = cms.InputTag('goodOfflinePrimaryVertices'),
+                                                muonTag = tags('selectedPatMuons'+self.options.postfix),
+                                                vertexTag = tags('goodOfflinePrimaryVertices'),
                                                 prefix = cms.string('mu') )
         return self.empty + self.process.tupleMuon
         
+    def met(self) :
+        self.process.tupleMET = cms.EDProducer("Tuple_PatMET",
+                                               metTag = tags("patMETs"+self.options.postfix),
+                                               prefix = cms.string("met"),
+                                               particlesTag = tags("particleFlow"),
+                                               particlesPrefix = cms.string('pf')
+                                               )
+        return self.empty + self.process.tupleMET

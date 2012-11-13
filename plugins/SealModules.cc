@@ -9,7 +9,6 @@
 #include "TopQuarkAnalysis/TopRefTuple/interface/Tuple_Triggers.h"
 //#include "TopQuarkAnalysis/TopRefTuple/interface/Tuple_L1Triggers.h"
 #include "TopQuarkAnalysis/TopRefTuple/interface/Tuple_MET.h"
-//#include "TopQuarkAnalysis/TopRefTuple/interface/Tuple_SumP4.h"
 #include "TopQuarkAnalysis/TopRefTuple/interface/Tuple_Jet.h"
 #include "TopQuarkAnalysis/TopRefTuple/interface/Tuple_Electron.h"
 #include "TopQuarkAnalysis/TopRefTuple/interface/Tuple_Muon.h"
@@ -29,7 +28,6 @@ DEFINE_FWK_MODULE(Tuple_Event);
 DEFINE_FWK_MODULE(Tuple_Triggers);
 //DEFINE_FWK_MODULE(Tuple_L1Triggers);
 DEFINE_FWK_MODULE(Tuple_PatMET);
-//DEFINE_FWK_MODULE(Tuple_SumP4);
 DEFINE_FWK_MODULE(Tuple_PatJet);
 DEFINE_FWK_MODULE(Tuple_Electron);
 DEFINE_FWK_MODULE(Tuple_Muon);
