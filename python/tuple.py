@@ -96,5 +96,4 @@ class Tuple(object) :
                                                pfInfo = cms.bool(True),
                                                genInfo = cms.bool( not self.options.isData)
                                                )
-        print self.process.tupleJet.dumpPython()
         return self.empty + self.process.tupleJet
