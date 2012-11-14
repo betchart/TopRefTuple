@@ -2,6 +2,7 @@
 #define TUPLE_JET
 
 #include "boost/foreach.hpp"
+#include "TopQuarkAnalysis/TopRefTuple/interface/fTypes.h"
 #include "FWCore/Framework/interface/EDProducer.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/Event.h"
@@ -46,11 +47,11 @@ Tuple_Jet(const edm::ParameterSet& cfg) :
   pfSpecific(cfg.getParameter<bool>("pfInfo")),
   gen(cfg.getParameter<bool>("genInfo"))
 {
-  produces <std::vector<reco::Candidate::LorentzVector> > ( prefix + "P4"   );
-  produces <std::vector<float> >                          ( prefix + "JecUnc"      );
-  produces <std::vector<float> >                          ( prefix + "Area"        );
-  produces <std::vector<float> >                          ( prefix + "Eta2Moment"  );
-  produces <std::vector<float> >                          ( prefix + "Phi2Moment"  );
+  produces <std::vector<fTypes::dPolarLorentzV> > ( prefix + "P4"   );
+  produces <std::vector<float> >                  ( prefix + "JecUnc"      );
+  produces <std::vector<float> >                  ( prefix + "Area"        );
+  produces <std::vector<float> >                  ( prefix + "Eta2Moment"  );
+  produces <std::vector<float> >                  ( prefix + "Phi2Moment"  );
   initSpecial();
 }
 
@@ -73,7 +74,7 @@ float uncFunc(JetCorrectionUncertainty* jCU, const reco::Candidate::LorentzVecto
 template< typename T > 
 void Tuple_Jet<T>::
 produce(edm::Event& evt, const edm::EventSetup& setup) {
-  typedef reco::Candidate::LorentzVector LorentzV;
+  typedef fTypes::dPolarLorentzV LorentzV;
   edm::Handle<edm::View<T> > jets;     evt.getByLabel(jetsTag, jets);
 
   std::auto_ptr<std::vector<LorentzV> >   p4   ( new std::vector<LorentzV>()  )  ;
@@ -85,7 +86,7 @@ produce(edm::Event& evt, const edm::EventSetup& setup) {
   if(jets.isValid()) {
     JetCorrectionUncertainty* jCU = jetCorrUnc(setup, jecRecord);
     for(typename edm::View<T>::const_iterator jet = jets->begin(); jet!=jets->end(); jet++) {
-      p4->push_back(jet->p4());
+      p4->push_back(LorentzV(jet->pt(),jet->eta(),jet->phi(),jet->mass()));
       eta2mom->push_back(jet->etaetaMoment());
       phi2mom->push_back(jet->phiphiMoment());
       jetArea->push_back(jet->jetArea());
