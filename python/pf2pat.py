@@ -29,6 +29,7 @@ class TopRefPF2PAT(object) :
                            jetAlgo = 'AK5',
                            jetCorrections = ('AK5PFchs', ['L1FastJet','L2Relative','L3Absolute','L2L3Residual'][:None if options.isData else -1] )
                            )
+        getattr( process, 'pfPileUp'+options.postfix).checkClosestZVertex = False # https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyCorrections#JetEnCorPFnoPU2012
         getattr( process, 'pfPileUpIso'+options.postfix).checkClosestZVertex = True
         if options.isData: coreTools.runOnData( process, names = [ 'PFAll' ], postfix = options.postfix )
         coreTools.removeSpecificPATObjects( process, names = [ 'Photons', 'Taus' ], postfix = options.postfix )
