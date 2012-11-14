@@ -19,7 +19,7 @@ class Tuple(object) :
                          self.electron() *
                          self.muon() *
                          self.met() *
-                         #jet
+                         self.jet() *
                          #vertex
                          self.tree() )
 
@@ -85,3 +85,16 @@ class Tuple(object) :
                                                particlesPrefix = cms.string('pf')
                                                )
         return self.empty + self.process.tupleMET
+
+    def jet(self) :
+        self.process.tupleJet = cms.EDProducer("Tuple_PatJet",
+                                               prefix = cms.string("jet"),
+                                               jetsTag = tags("selectedPatJets"+self.options.postfix),
+                                               genTag = tags("ak5GenJetsNoNu"),
+                                               jecRecord = cms.string("AK5PFchs"),
+                                               bTags = cms.vstring(self.options.btags),
+                                               pfInfo = cms.bool(True),
+                                               genInfo = cms.bool( not self.options.isData)
+                                               )
+        print self.process.tupleJet.dumpPython()
+        return self.empty + self.process.tupleJet

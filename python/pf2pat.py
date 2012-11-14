@@ -64,7 +64,7 @@ class TopRefPF2PAT(object) :
         self.options = options
         self.fix = options.postfix
         self.patSeq = getattr(process, 'patPF2PATSequence' + self.fix)
-        self.btags = ['combinedSecondaryVertex','jetProbability']
+        self.btags = self.options.btags
         self.taginfos = ["impactParameter","secondaryVertex"]
 
         self.configTopProjections()
