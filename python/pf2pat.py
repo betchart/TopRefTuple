@@ -29,8 +29,11 @@ class TopRefPF2PAT(object) :
                            jetAlgo = 'AK5',
                            jetCorrections = ('AK5PFchs', ['L1FastJet','L2Relative','L3Absolute','L2L3Residual'][:None if options.isData else -1] )
                            )
+
         getattr( process, 'pfPileUp'+options.postfix).checkClosestZVertex = False # https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyCorrections#JetEnCorPFnoPU2012
         getattr( process, 'pfPileUpIso'+options.postfix).checkClosestZVertex = True
+        getattr( process, 'patJetCorrFactors'+options.postfix).flavorType = 'T' # top events, not dijets, but only relevant for L5Flavor,L7Parton
+        #getattr( process, 'patJetCorrFactors'+options.postfix).levels.append('L5Flavor') # apparently not available in GlobalTags
         if options.isData: coreTools.runOnData( process, names = [ 'PFAll' ], postfix = options.postfix )
         coreTools.removeSpecificPATObjects( process, names = [ 'Photons', 'Taus' ], postfix = options.postfix )
 
