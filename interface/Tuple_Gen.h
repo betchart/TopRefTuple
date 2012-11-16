@@ -26,6 +26,7 @@ class Tuple_Gen : public edm::EDProducer {
   const std::string Prefix,Suffix;
   const double GenStatus1PtCut;
   const double GenJetPtCut;
+  const bool onlyStatus3;
 };
 
 template< typename T > Tuple_Gen<T>::
@@ -35,7 +36,8 @@ Tuple_Gen(const edm::ParameterSet& conf)
     Prefix(conf.getParameter<std::string>("Prefix")),
     Suffix(conf.getParameter<std::string>("Suffix")),
     GenStatus1PtCut(conf.getParameter<double>("GenStatus1PtCut")),
-    GenJetPtCut(conf.getParameter<double>("GenJetPtCut")) 
+    GenJetPtCut(conf.getParameter<double>("GenJetPtCut")),
+    onlyStatus3(conf.getParameter<bool>("OnlyStatus3"))
 {
   produces <unsigned int> (Prefix + "signalProcessID" + Suffix);
   produces <bool>   (Prefix + "GenInfoHandleValid" + Suffix);
@@ -99,13 +101,14 @@ produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   if(collection.isValid()){
     for(typename std::vector<T>::const_iterator it = collection->begin(); it != collection->end(); ++it) {
-      if ( it->status() == 3         // any status 3 genParticle
-	   || abs(it->pdgId()) == 11 // any electron
-	   || abs(it->pdgId()) == 13 // any muon
-	   || abs(it->pdgId()) == 15 // any tau
-	   || ( it->status() == 1    //        status 1 particles
-		&& it->pt() > GenStatus1PtCut) // above threshold
-	   ) {
+      if ( it->status() == 3 ||      // any status 3 genParticle
+	   ( !onlyStatus3 &&
+	     ( abs(it->pdgId()) == 11 // any electron
+	       || abs(it->pdgId()) == 13 // any muon
+	       || abs(it->pdgId()) == 15 // any tau
+	       || ( it->status() == 1    //        status 1 particles
+		    && it->pt() > GenStatus1PtCut) // above threshold
+	       ))) {
 	p4->push_back(LorentzVector(it->pt(),it->eta(),it->phi(),it->mass()));
 	status->push_back(it->status());
 	pdgId->push_back(it->pdgId());
