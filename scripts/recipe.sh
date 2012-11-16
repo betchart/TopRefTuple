@@ -1,6 +1,8 @@
-cmsrel CMSSW_5_3_5
-cd CMSSW_5_3_5/src
+RELEASE=CMSSW_5_3_5
+cmsrel $RELEASE
+cd $RELEASE/src
 cmsenv
+cp $CMSSW_RELEASE_BASE/src/CondFormats/JetMETObjects/data/Spring10_PtResolution_AK5PF.txt .
 cvs co -r V00-00-08    RecoMET/METAnalyzers
 cvs co -r V15-02-06    RecoParticleFlow/PFProducer
 cvs co              -d TopQuarkAnalysis/TopRefTuple UserCode/Betchart/TopRefTuple
