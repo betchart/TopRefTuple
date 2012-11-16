@@ -1,4 +1,4 @@
-import math
+import math,os
 from FWCore.ParameterSet import Config as cms
 
 def tags(stuff) :
@@ -20,7 +20,6 @@ class Tuple(object) :
                          self.muon() *
                          self.met() *
                          self.jet() *
-                         #vertex
                          self.tree() )
 
     def attr(self, item) : return getattr(self.process, item)
@@ -32,7 +31,8 @@ class Tuple(object) :
         return self.process.topRef
         
     def events(self) :
-        self.process.tupleEvents = cms.EDProducer("Tuple_Event")
+        self.process.tupleEvents = cms.EDProducer("Tuple_Event",
+                                                  vertexTag = tags("goodOfflinePrimaryVertices"))
         return self.empty + self.process.tupleEvents
         
     def gen(self) :
@@ -44,6 +44,7 @@ class Tuple(object) :
                                                Suffix = cms.string(''),
                                                GenStatus1PtCut = cms.double(1000.0),
                                                GenJetPtCut = cms.double(10.0),
+                                               OnlyStatus3 = cms.bool(True)
                                                )
         self.process.tuplePileup = cms.EDProducer("Tuple_PileupSummary",
                                                   InputTag = tags('addPileupInfo'),
@@ -87,6 +88,7 @@ class Tuple(object) :
         return self.empty + self.process.tupleMET
 
     def jet(self) :
+        jetResFile = '%s/src/CondFormats/JetMETObjects/data/Spring10_PtResolution_AK5PF.txt'%os.environ['CMSSW_RELEASE_BASE']
         self.process.tupleJet = cms.EDProducer("Tuple_PatJet",
                                                prefix = cms.string("jet"),
                                                jetsTag = tags("selectedPatJets"+self.options.postfix),
@@ -95,7 +97,7 @@ class Tuple(object) :
                                                bTags = cms.vstring(self.options.btags),
                                                pfInfo = cms.bool(True),
                                                genInfo = cms.bool( not self.options.isData),
-                                               jetResolutionFile = cms.string('Spring10_PtResolution_AK5PF.txt'),
+                                               jetResolutionFile = cms.string(jetResFile),
 
                                                # https://twiki.cern.ch/twiki/bin/view/CMS/JetResolution
                                                resolutionRatioBins = cms.vdouble(0.0, 0.5, 1.1, 1.7, 2.3, 5.0),
@@ -107,4 +109,5 @@ class Tuple(object) :
                                                                                  math.sqrt( 0.127**2 + 0.154**2  )
                                                                                  )
                                                )
+        os.system("cp %s ."%jetResFile)
         return self.empty + self.process.tupleJet
