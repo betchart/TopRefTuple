@@ -1,4 +1,4 @@
-RELEASE=CMSSW_5_3_5
+RELEASE=CMSSW_5_3_6_patch1
 cmsrel $RELEASE
 cd $RELEASE/src
 cmsenv
