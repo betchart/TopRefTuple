@@ -7,53 +7,16 @@
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/Event.h"
 
-#include "DataFormats/JetReco/interface/PFJet.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 
 #include "PhysicsTools/SelectorUtils/interface/PFJetIDSelectionFunctor.h"
 
+#include "CondFormats/JetMETObjects/interface/JetResolution.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
 #include "JetMETCorrections/Objects/interface/JetCorrectionsRecord.h"
+#include "TH1D.h"
 
-template< typename T >
-class Tuple_Jet : public edm::EDProducer {
- public: 
-  explicit Tuple_Jet(const edm::ParameterSet&);
- private: 
-  void produce(edm::Event&, const edm::EventSetup& );
-  void initSpecial(); void produceSpecial(edm::Event&, const edm::Handle<edm::View<T> >&);
-  void initPF();      void producePF(edm::Event&, const edm::Handle<edm::View<T> >&);
-  void initBJetTag(); void produceBJetTag(edm::Event&, const edm::Handle<edm::View<T> >&);
-  void initGenJetMatch(); void produceGenJetMatch(edm::Event&, const edm::Handle<edm::View<T> >&);
-
-  template <class I> int indexOfMatch( const reco::GenJet*, const I, const I);
-  std::auto_ptr<std::vector<float> > correctionFactors(const edm::Handle<edm::View<T> >&);
-  
-  const edm::InputTag jetsTag, genTag;
-  const std::string prefix,jecRecord;
-  const std::vector<std::string> btagNames;
-  const bool pfSpecific, gen;
-
-};
-
-template<class T> Tuple_Jet<T>::
-Tuple_Jet(const edm::ParameterSet& cfg) :
-  jetsTag(cfg.getParameter<edm::InputTag>("jetsTag")),
-  genTag(cfg.getParameter<edm::InputTag>("genTag")),
-  prefix(cfg.getParameter<std::string>("prefix")),
-  jecRecord(cfg.getParameter<std::string>("jecRecord")),
-  btagNames(cfg.getParameter<std::vector<std::string> >("bTags")),
-  pfSpecific(cfg.getParameter<bool>("pfInfo")),
-  gen(cfg.getParameter<bool>("genInfo"))
-{
-  produces <std::vector<fTypes::dPolarLorentzV> > ( prefix + "P4"   );
-  produces <std::vector<float> >                  ( prefix + "JecUnc"      );
-  produces <std::vector<float> >                  ( prefix + "Area"        );
-  produces <std::vector<float> >                  ( prefix + "Eta2Moment"  );
-  produces <std::vector<float> >                  ( prefix + "Phi2Moment"  );
-  initSpecial();
-}
 
 JetCorrectionUncertainty* jetCorrUnc(const edm::EventSetup& setup, const std::string& jecRecord) {
   edm::ESHandle<JetCorrectorParametersCollection> JetCorParColl;
@@ -71,65 +34,122 @@ float uncFunc(JetCorrectionUncertainty* jCU, const reco::Candidate::LorentzVecto
   }
 }
 
+template< typename T >
+class Tuple_Jet : public edm::EDProducer {
+ public: 
+  explicit Tuple_Jet(const edm::ParameterSet&);
+  typedef fTypes::dPolarLorentzV LorentzV;
+ private: 
+  void produce(edm::Event&, const edm::EventSetup& );
+  void initPF();   void producePF(edm::Event&, const edm::Handle<edm::View<T> >&);
+  void initBJet(); void produceBJet(edm::Event&, const edm::Handle<edm::View<T> >&);
+  void initGen();  void produceGen(edm::Event&, const edm::Handle<edm::View<T> >&);
+
+  const edm::InputTag jetsTag, allJetsTag;
+  const std::string prefix,jecRecord;
+  const std::vector<std::string> btagNames;
+  const bool pfInfo, genInfo;
+  JetResolution jer;
+  TH1D dataMcResolutionRatio;
+};
+
+template<class T> Tuple_Jet<T>::
+Tuple_Jet(const edm::ParameterSet& cfg) :
+  jetsTag(cfg.getParameter<edm::InputTag>("jetsTag")),
+  allJetsTag(cfg.getParameter<edm::InputTag>("allJetsTag")),
+  prefix(cfg.getParameter<std::string>("prefix")),
+  jecRecord(cfg.getParameter<std::string>("jecRecord")),
+  btagNames(cfg.getParameter<std::vector<std::string> >("bTags")),
+  pfInfo(cfg.getParameter<bool>("pfInfo")),
+  genInfo(cfg.getParameter<bool>("genInfo")),
+  jer(cfg.getParameter<std::string>("jetResolutionFile")),
+  dataMcResolutionRatio("dataMcResolutionRatio",
+			"",
+			cfg.getParameter<std::vector<double> >("resolutionRatioBins").size()-1,
+			&cfg.getParameter<std::vector<double> >("resolutionRatioBins").at(0) )
+{
+  for(int bin=1; bin<=dataMcResolutionRatio.GetNbinsX(); ++bin) {
+    dataMcResolutionRatio.SetBinContent( bin, cfg.getParameter<std::vector<double> >("resolutionRatio").at(bin-1) );
+    dataMcResolutionRatio.SetBinError( bin, cfg.getParameter<std::vector<double> >("resolutionRatioErr").at(bin-1) );
+  }
+  dataMcResolutionRatio.SetBinContent( 1 + dataMcResolutionRatio.GetNbinsX(), 1.0);
+  dataMcResolutionRatio.SetBinError( 1 + dataMcResolutionRatio.GetNbinsX(), 0.0);
+
+  dataMcResolutionRatio.Print("all");
+
+  //produces <std::vector<float> >                  ( prefix + "JecFactorB"  );
+  produces <std::vector<LorentzV> > ( prefix + "P4"   );
+  produces <std::vector<float> >    ( prefix + "JecFactor"   );
+  produces <std::vector<float> >    ( prefix + "JecUnc"      );
+  produces <std::vector<float> >    ( prefix + "Area"        );
+  produces <std::vector<float> >    ( prefix + "Resolution"  );
+  produces <std::vector<float> >    ( prefix + "Charge"      );
+  produces <std::vector<float> >    ( prefix + "Eta2Moment"  );
+  produces <std::vector<float> >    ( prefix + "Phi2Moment"  );
+
+  initBJet();
+  if(pfInfo) initPF();
+  if(genInfo) initGen();
+}
+
 template< typename T > 
 void Tuple_Jet<T>::
 produce(edm::Event& evt, const edm::EventSetup& setup) {
-  typedef fTypes::dPolarLorentzV LorentzV;
   edm::Handle<edm::View<T> > jets;     evt.getByLabel(jetsTag, jets);
 
+  //std::auto_ptr<std::vector<float> > jecFactorB( new std::vector<float>()  )  ;
   std::auto_ptr<std::vector<LorentzV> >   p4   ( new std::vector<LorentzV>()  )  ;
-  std::auto_ptr<std::vector<float> >  jetArea  ( new std::vector<float>()  )  ;
+  std::auto_ptr<std::vector<float> >  jecFactor( new std::vector<float>()  )  ;
   std::auto_ptr<std::vector<float> >  jecUnc   ( new std::vector<float>()  )  ;
+  std::auto_ptr<std::vector<float> >  reso     ( new std::vector<float>()  )  ;
+  std::auto_ptr<std::vector<float> >  area     ( new std::vector<float>()  )  ;
+  std::auto_ptr<std::vector<float> >  charge   ( new std::vector<float>()  )  ;
   std::auto_ptr<std::vector<float> >  eta2mom  ( new std::vector<float>()  )  ;
   std::auto_ptr<std::vector<float> >  phi2mom  ( new std::vector<float>()  )  ;
 
   if(jets.isValid()) {
     JetCorrectionUncertainty* jCU = jetCorrUnc(setup, jecRecord);
     for(typename edm::View<T>::const_iterator jet = jets->begin(); jet!=jets->end(); jet++) {
+      //jecFactorB->push_back( jet->jecSetsAvailable() ? jet->correctedJet("L5Flavor","bottom").energy() / jet->energy() : 1.0 );
       p4->push_back(LorentzV(jet->pt(),jet->eta(),jet->phi(),jet->mass()));
+      jecFactor->push_back( jet->jecSetsAvailable() ? jet->energy() / jet->correctedJet("Uncorrected").energy() : 1.0 );
+      jecUnc->push_back(uncFunc(jCU, jet->p4()));
+      reso->push_back( jer.parameterEta("sigma", jet->eta())->Eval( jet->pt() )  );
+      area->push_back(jet->jetArea());
+      charge->push_back(jet->jetCharge());
       eta2mom->push_back(jet->etaetaMoment());
       phi2mom->push_back(jet->phiphiMoment());
-      jetArea->push_back(jet->jetArea());
-      
-      jecUnc->push_back(uncFunc(jCU, jet->p4()));
     }
     delete jCU;
   }
 
-  evt.put(      p4, prefix + "P4"  );
-  evt.put(  jecUnc, prefix + "JecUnc"      );
-  evt.put( jetArea, prefix + "Area"        );
-  evt.put( eta2mom, prefix + "Eta2Moment"  );
-  evt.put( phi2mom, prefix + "Phi2Moment"  );
+  //evt.put(jecFactorB, prefix + "JecFactorB"  );
+  evt.put(      p4,   prefix + "P4"  );
+  evt.put(jecFactor,  prefix + "JecFactor"   );
+  evt.put(  jecUnc,   prefix + "JecUnc"      );
+  evt.put(    reso,   prefix + "Resolution"  );
+  evt.put(    area,   prefix + "Area"        );
+  evt.put(  charge,   prefix + "Charge"      );
+  evt.put( eta2mom,   prefix + "Eta2Moment"  );
+  evt.put( phi2mom,   prefix + "Phi2Moment"  );
   
-  produceSpecial(evt, jets);
+  produceBJet(evt,jets);
+  if(pfInfo) producePF(evt,jets);
+  if(genInfo) produceGen(evt,jets);
 }
-
-template<> void Tuple_Jet<pat::Jet>::initSpecial() {
-  initPF();
-  initBJetTag();
-  initGenJetMatch();
-}
-
-template<> void Tuple_Jet<pat::Jet>::produceSpecial(edm::Event& e,const edm::Handle<edm::View<pat::Jet> >& h) {
-  producePF(e,h);
-  produceBJetTag(e,h);
-  produceGenJetMatch(e,h);
-}
-
 
 template<class T> void Tuple_Jet<T>::
-initPF() { if(!pfSpecific) return;
+initPF() {
   produces <std::vector<float> > (prefix + "FchargedHad" );
   produces <std::vector<float> > (prefix + "FneutralHad" );
   produces <std::vector<float> > (prefix + "FchargedEm" );
   produces <std::vector<float> > (prefix + "FneutralEm" );
   produces <std::vector<float> > (prefix + "FchargedMu" );
 
-
   produces <std::vector<unsigned> > (prefix + "Ncharged" );
   produces <std::vector<unsigned> > (prefix + "Nneutral" );
   produces <std::vector<unsigned> > (prefix + "Nmuon" );
+  produces <std::vector<unsigned> > (prefix + "Ndaughters" );
   
   produces <std::vector<bool> > ( prefix + "PFJetIDloose"   );
   produces <std::vector<bool> > ( prefix + "PFJetIDtight"   );
@@ -137,7 +157,7 @@ initPF() { if(!pfSpecific) return;
 }
 
 template<class T> void Tuple_Jet<T>::
-producePF(edm::Event& evt, const edm::Handle<edm::View<T> >& jets) { if(!pfSpecific) return;
+producePF(edm::Event& evt, const edm::Handle<edm::View<T> >& jets) {
   std::auto_ptr<std::vector<float> > FchargedHad( new std::vector<float>() );
   std::auto_ptr<std::vector<float> > FneutralHad( new std::vector<float>() );
   std::auto_ptr<std::vector<float> > FchargedEm( new std::vector<float>() );
@@ -147,6 +167,7 @@ producePF(edm::Event& evt, const edm::Handle<edm::View<T> >& jets) { if(!pfSpeci
   std::auto_ptr<std::vector<unsigned> > Ncharged( new std::vector<unsigned>() );
   std::auto_ptr<std::vector<unsigned> > Nneutral( new std::vector<unsigned>() );
   std::auto_ptr<std::vector<unsigned> > Nmuon( new std::vector<unsigned>() );
+  std::auto_ptr<std::vector<unsigned> > Ndaughters( new std::vector<unsigned>() );
 
   std::auto_ptr<std::vector<bool> >  pfjetidloose  ( new std::vector<bool>()  ) ;
   std::auto_ptr<std::vector<bool> >  pfjetidtight  ( new std::vector<bool>()  ) ;
@@ -169,6 +190,7 @@ producePF(edm::Event& evt, const edm::Handle<edm::View<T> >& jets) { if(!pfSpeci
       Ncharged->push_back( (unsigned) jet->chargedMultiplicity() );
       Nneutral->push_back( (unsigned) jet->neutralMultiplicity() );
       Nmuon->push_back( (unsigned) jet->muonMultiplicity() );
+      Ndaughters->push_back( (unsigned) jet->numberOfDaughters() );
       
       pfjetidloose->push_back(pfLooseJetID( *jet, passLooseCuts  ));
       pfjetidtight->push_back(pfTightJetID( *jet, passTightCuts  ));
@@ -183,6 +205,7 @@ producePF(edm::Event& evt, const edm::Handle<edm::View<T> >& jets) { if(!pfSpeci
   evt.put(Ncharged,    prefix + "Ncharged"    );
   evt.put(Nneutral,    prefix + "Nneutral"    );
   evt.put(Nmuon,       prefix + "Nmuon"       );
+  evt.put(Ndaughters,  prefix + "Ndaughters"  );
  
   evt.put( pfjetidloose,  prefix + "PFJetIDloose"   );
   evt.put( pfjetidtight,  prefix + "PFJetIDtight"   );
@@ -191,53 +214,93 @@ producePF(edm::Event& evt, const edm::Handle<edm::View<T> >& jets) { if(!pfSpeci
 
 
 template<class T> void Tuple_Jet<T>::
-initBJetTag(){
-  produces <std::vector<int> > (prefix + "GenJetFlavour" );
-  BOOST_FOREACH(const std::string& btag, btagNames)
-    produces <std::vector<float> > (prefix + btag);
-}
+initBJet(){ BOOST_FOREACH(const std::string& btag, btagNames) produces <std::vector<float> > (prefix + btag);}
 
 template<class T> void Tuple_Jet<T>::
-produceBJetTag(edm::Event& evt, const edm::Handle<edm::View<T> >& jets) {
-  std::auto_ptr<std::vector<int> > flavour(new std::vector<int>() );
+produceBJet(edm::Event& evt, const edm::Handle<edm::View<T> >& jets) {
   std::map<std::string, std::vector<float>* > btags;
-  BOOST_FOREACH(const std::string& btag, btagNames)
-    btags[btag] = new std::vector<float>();
+  BOOST_FOREACH(const std::string& btag, btagNames) btags[btag] = new std::vector<float>();
 
-  if(jets.isValid()) {
-    for(typename edm::View<T>::const_iterator jet = jets->begin(); jet!=jets->end(); jet++) {
-      flavour->push_back(jet->partonFlavour());
-      BOOST_FOREACH(const std::string& btag, btagNames)
-	btags[btag]->push_back(jet->bDiscriminator(btag+"BJetTags"));
+  if(jets.isValid())
+    for(typename edm::View<T>::const_iterator jet = jets->begin(); jet!=jets->end(); jet++)
+      BOOST_FOREACH(const std::string& btag, btagNames)	btags[btag]->push_back(jet->bDiscriminator(btag+"BJetTags"));
+  
+  BOOST_FOREACH(const std::string& btag, btagNames) evt.put( std::auto_ptr<std::vector<float> >(btags[btag]), prefix + btag );
+}
+
+template<class T> 
+void Tuple_Jet<T>::
+initGen() {
+  produces <LorentzV> (prefix + "DeltaMETSmear");
+  produces <LorentzV> (prefix + "DeltaMETSmearUp");
+  produces <LorentzV> (prefix + "DeltaMETSmearDown");
+
+  produces <std::vector<float> > (prefix + "Smear");
+  produces <std::vector<float> > (prefix + "SmearUp");
+  produces <std::vector<float> > (prefix + "SmearDown");
+  produces <std::vector<LorentzV> > (prefix + "GenP4" );
+  produces <std::vector<int> > (prefix + "GenFlavor" );
+}
+
+
+template<class T> 
+void Tuple_Jet<T>::
+produceGen(edm::Event& evt, const edm::Handle<edm::View<T> >& jets){
+
+  edm::Handle<edm::View<T> > all;  evt.getByLabel(allJetsTag, all);
+
+  std::auto_ptr<LorentzV> deltaMET( new LorentzV() );
+  std::auto_ptr<LorentzV> deltaMETu( new LorentzV() );
+  std::auto_ptr<LorentzV> deltaMETd( new LorentzV() );
+
+  if(all.isValid()) {
+    for (typename edm::View<T>::const_iterator jet = all->begin(); jet!=all->end(); ++jet ) {
+      const reco::GenJet * gen = jet->genJet();
+      if( !gen || gen->pt() < 15) continue;
+      const int bin( dataMcResolutionRatio.FindFixBin(fabs(gen->eta())) );
+      const double
+  	c( dataMcResolutionRatio.GetBinContent(bin) ),
+  	cu( c + dataMcResolutionRatio.GetBinError(bin) ),
+  	cd( 2*c - cu ),
+  	pTgOverPt( gen->pt() / jet->pt() );
+      *deltaMET  += (1 - std::max(0., c  + (1-c ) * pTgOverPt ) ) * jet->p4() ;
+      *deltaMETu += (1 - std::max(0., cu + (1-cu) * pTgOverPt ) ) * jet->p4() ;
+      *deltaMETd += (1 - std::max(0., cd + (1-cd) * pTgOverPt ) ) * jet->p4() ;
     }
   }
+  evt.put( deltaMET, prefix + "DeltaMETSmear");
+  evt.put( deltaMETu, prefix + "DeltaMETSmearUp");
+  evt.put( deltaMETd, prefix + "DeltaMETSmearDown");
 
-  evt.put( flavour, prefix + "GenJetFlavour" );
-  BOOST_FOREACH(const std::string& btag, btagNames)
-    evt.put( std::auto_ptr<std::vector<float> >(btags[btag]), prefix + btag );
+  std::auto_ptr<std::vector<LorentzV> > p4(new std::vector<LorentzV>() );
+  std::auto_ptr<std::vector<int> > flavor(new std::vector<int>() );
+  std::auto_ptr<std::vector<float> > smear(new std::vector<float>() );
+  std::auto_ptr<std::vector<float> > smearu(new std::vector<float>() );
+  std::auto_ptr<std::vector<float> > smeard(new std::vector<float>() );
+
+  if(jets.isValid()) {
+    for (typename edm::View<T>::const_iterator jet = jets->begin(); jet!=jets->end(); ++jet ) {
+      const reco::GenJet * gen = jet->genJet();
+      const int bin( gen ? dataMcResolutionRatio.FindFixBin(fabs(gen->eta())) : -1 );
+      const double
+	c( dataMcResolutionRatio.GetBinContent(bin) ),
+	cu( c + dataMcResolutionRatio.GetBinError(bin) ),
+	cd( 2*c - cu ),
+	pTgOverPt( gen ? gen->pt() / jet->pt() : 0 );
+
+      p4->push_back( gen ? LorentzV(gen->pt(), gen->eta(), gen->phi(), gen->mass()) : LorentzV());
+      flavor->push_back(jet->partonFlavour());
+      smear->push_back(  gen ? std::max(0., c  + (1-c ) * pTgOverPt ) : 1.0);
+      smearu->push_back( gen ? std::max(0., cu + (1-cu) * pTgOverPt ) : 1.0);
+      smeard->push_back( gen ? std::max(0., cd + (1-cd) * pTgOverPt ) : 1.0);
+    }
+  }
+  evt.put(     p4, prefix + "GenP4" );
+  evt.put( flavor, prefix + "GenFlavor" );
+  evt.put( smear , prefix + "Smear" );
+  evt.put( smearu, prefix + "SmearUp" );
+  evt.put( smeard, prefix + "SmearDown" );
 }
-
-template<class T> void Tuple_Jet<T>::
-initGenJetMatch() { if(gen) produces <std::vector<int> > (prefix + "GenJetMatchIndex" );}
-
-template<class T> void Tuple_Jet<T>::
-produceGenJetMatch(edm::Event& evt, const edm::Handle<edm::View<T> >& jets){
-  if(!gen) return;
-  edm::Handle<edm::View<reco::GenJet> > genjets; 
-  evt.getByLabel(genTag, genjets);
-  std::auto_ptr<std::vector<int> > genjetMatchIndex( new std::vector<int>() );
-  if(jets.isValid() && genjets.isValid())
-    for (typename edm::View<T>::const_iterator jet = jets->begin(); jet!=jets->end(); ++jet ) 
-      genjetMatchIndex->push_back( indexOfMatch( jet->genJet(), genjets->begin(), genjets->end()) );
-  evt.put(genjetMatchIndex, prefix + "GenJetMatchIndex" );
-}
-
-template<class T> template<class I> int Tuple_Jet<T>::
-indexOfMatch( const reco::GenJet* genjet, const I begin, const I end) {
-  for(I it=begin; it!=end; ++it) if ( genjet && genjet->p4() == it->p4() ) return it-begin; //p4 comparisons
-  return -1;
-}
-
 
 #endif
 

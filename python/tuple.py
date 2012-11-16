@@ -1,4 +1,4 @@
-import operator
+import math
 from FWCore.ParameterSet import Config as cms
 
 def tags(stuff) :
@@ -39,7 +39,7 @@ class Tuple(object) :
         if self.options.isData : return self.empty
         self.process.tupleGen = cms.EDProducer("Tuple_GenParticle",
                                                InputTag = tags('genParticles'),
-                                               JetCollections = tags(["ak5GenJetsNoNu"]),
+                                               JetCollections = tags([]),
                                                Prefix = cms.string('gen'),
                                                Suffix = cms.string(''),
                                                GenStatus1PtCut = cms.double(1000.0),
@@ -90,10 +90,21 @@ class Tuple(object) :
         self.process.tupleJet = cms.EDProducer("Tuple_PatJet",
                                                prefix = cms.string("jet"),
                                                jetsTag = tags("selectedPatJets"+self.options.postfix),
-                                               genTag = tags("ak5GenJetsNoNu"),
+                                               allJetsTag = tags("patJets"+self.options.postfix),
                                                jecRecord = cms.string("AK5PFchs"),
                                                bTags = cms.vstring(self.options.btags),
                                                pfInfo = cms.bool(True),
-                                               genInfo = cms.bool( not self.options.isData)
+                                               genInfo = cms.bool( not self.options.isData),
+                                               jetResolutionFile = cms.string('Spring10_PtResolution_AK5PF.txt'),
+
+                                               # https://twiki.cern.ch/twiki/bin/view/CMS/JetResolution
+                                               resolutionRatioBins = cms.vdouble(0.0, 0.5, 1.1, 1.7, 2.3, 5.0),
+                                               resolutionRatio = cms.vdouble(1.052, 1.057, 1.096, 1.134, 1.288),
+                                               resolutionRatioErr = cms.vdouble( math.sqrt( 0.012**2 + 0.0615**2 ),
+                                                                                 math.sqrt( 0.012**2 + 0.0555**2 ),
+                                                                                 math.sqrt( 0.017**2 + 0.0625**2 ),
+                                                                                 math.sqrt( 0.035**2 + 0.086**2  ),
+                                                                                 math.sqrt( 0.127**2 + 0.154**2  )
+                                                                                 )
                                                )
         return self.empty + self.process.tupleJet
