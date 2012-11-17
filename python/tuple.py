@@ -97,7 +97,7 @@ class Tuple(object) :
                                                bTags = cms.vstring(self.options.btags),
                                                pfInfo = cms.bool(True),
                                                genInfo = cms.bool( not self.options.isData),
-                                               jetResolutionFile = cms.string(jetResFile),
+                                               jetResolutionFile = cms.string(jetResFile.split('/')[-1]),
 
                                                # https://twiki.cern.ch/twiki/bin/view/CMS/JetResolution
                                                resolutionRatioBins = cms.vdouble(0.0, 0.5, 1.1, 1.7, 2.3, 5.0),
