@@ -46,7 +46,7 @@ class planner:
     def list_entries(self,select) :
         rows = self.db.execute(select).fetchall()
         if len(rows) :   print rows[0].keys()
-        for row in rows :  print '\t'.join([str(item) for item in row])
+        for row in rows :  print ('\t'.join([str(item) for item in row]))[:170]
 
     def new_entry(self,table,cols='*') :
         c = self.db.cursor()

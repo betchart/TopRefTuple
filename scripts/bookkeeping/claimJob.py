@@ -120,6 +120,7 @@ copy_data=1
 user_remote_dir=%(USER_REMOTE)s
 storage_element=%(SE)s
 %(FNAL_SPECIFIC)s
+additional_input_files=*.txt
 
 [CRAB]
 cfg=crab.cfg
