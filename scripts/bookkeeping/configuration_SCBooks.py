@@ -1,11 +1,11 @@
 import webpage_SCBooks,sqlite3,os,sys,getpass,time
 db_version = 1
-icfpath = "/afs/cern.ch/user/b/bbetchar/www/web/ICF_Database"
+toppath = "/afs/cern.ch/user/b/bbetchar/www/web/TOP_Database"
 
-databases = {"ICF": {"db_location": icfpath,
+databases = {"TOP": {"db_location": toppath,
                      "db_file": 'sqlite%d.db' % db_version,
                      "db_lock": 'sqlite%d.lock' % db_version,
-                     "webpath": '%s/status%d.html'%(icfpath,db_version)},
+                     "webpath": '%s/status%d.html'%(toppath,db_version)},
 
              "TEST": {"db_location": "./",
                       "db_file": 'sqlite.db',

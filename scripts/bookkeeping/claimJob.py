@@ -42,7 +42,6 @@ def setup_output_dirs(option) :
                                 ['rfchmod 755 /'+'/'.join(dirs[:-i]) for i in range(1,len(dirs)-dirs.index(option["USER"]))])
                       )
 
-
 def setup_crab(job,option) :
 
     SITE = { "CASTOR" : {"SE":"srm-cms.cern.ch",
@@ -147,21 +146,21 @@ def run_crab(job,path,MULTI,onlyTest) :
 #!/usr/bin/env bash
     
 source /afs/cern.ch/cms/LCG/LCG-2/UI/cms_ui_env.sh
-cd %(path)s/%(cmssw)s/src/
+cd %(path)s/CMSSW_*/src/
 eval `scram runtime -sh`
 source %(crab_setup)s
 cd %(path)s
-python %(cmssw)s/src/TopQuarkAnalysis/TopRefTuple/test/config.py isData=%(isData)d globalTag=%(gt)s %(other)s
+python %(path)s/CMSSW_*/src/TopQuarkAnalysis/TopRefTuple/test/config.py isData=%(isData)d globalTag=%(gt)s %(other)s
 %(crab)s -create
-%(doit)s
+%(crab)s %(doit)s
 %(crab)s -status &> crab.status
-'''%{ "cmssw" : os.environ['CMSSW_BASE'],
+'''%{ "path": path,
       "isData" : job['isData'],
       "gt" : job['globalTag'],
       "other" : job['nonDefault'] if job['nonDefault'] else '',
       "crab" : "multicrab" if MULTI else "crab",
       "crab_setup" : "/afs/cern.ch/cms/ccs/wm/scripts/Crab/crab.sh",
-      "doit" : "" if onlyTest else "%(crab)s -submit"
+      "doit" : "" if onlyTest else "-submit"
       })
     return
 
