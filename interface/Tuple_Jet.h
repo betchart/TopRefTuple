@@ -119,7 +119,6 @@ produce(edm::Event& evt, const edm::EventSetup& setup) {
       p4->push_back(LorentzV(jet->pt(),jet->eta(),jet->phi(),jet->mass()));
       jecFactor->push_back( jet->jecSetsAvailable() ? jet->energy() / jet->correctedJet("Uncorrected").energy() : 1.0 );
       jecUnc->push_back(uncFunc(jCU, jet->p4()));
-      reso->push_back( jer.parameterEta("sigma", jet->eta())->Eval( jet->pt() )  );
       area->push_back(jet->jetArea());
       charge->push_back(jet->jetCharge());
       eta2mom->push_back(jet->etaetaMoment());
@@ -127,6 +126,10 @@ produce(edm::Event& evt, const edm::EventSetup& setup) {
 
       BOOST_FOREACH(const std::string& btag, btagNames)	
 	btags[btag]->push_back(jet->bDiscriminator(btag+"BJetTags"));
+
+      TF1 * jerEta = jer.parameterEta("sigma",jet->eta());
+      reso->push_back( jerEta->Eval( jet->pt() )  );
+      delete jerEta;
     }
     delete jCU;
   }
