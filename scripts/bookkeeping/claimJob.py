@@ -11,8 +11,8 @@ def get_jobrow(db) :
                        from job join dset on dset.rowid=job.dsetid
                        where state="Unclaimed"''').fetchall()
     for i,row in enumerate(rows):
-        print '\n'.join(['', row.keys(),
-                         '\t'.join([str(item) for item in row])[0:120] + "..."][None if i%10 else 2:])
+        print '\n'.join(['', str(row.keys()),
+                         '\t'.join([str(item) for item in row])[0:120] + "..."][2 if i%10 else None:])
     jobnumber = raw_input("\n\n\tWhich job?  ")
     if not jobnumber in [str(row['rowid']) for row in rows] :
         print jobnumber+' is not an `Unclaimed` job'
