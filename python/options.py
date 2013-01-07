@@ -15,17 +15,17 @@ def options() :
     options.parseArguments()
     options._tagOrder =[]
 
-    defaultGT = ('GR_R_53_V15' if options.isData else 'START53_V13')
+    defaultGT = ('GR_R_53_V18' if options.isData else 'START53_V15')
 
-    defaultFiles = ( pickRelValInputFiles( cmsswVersion = 'CMSSW_5_3_4_cand1',
-                                           dataTier     = 'RECO' if options.isData else 'AODSIM',
-                                           relVal       = 'SingleMu' if options.isData else 'RelValProdTTbar',
-                                           globalTag    = ( options.globalTag if options.globalTag else
-                                                            'GR_R_53_V12_RelVal_mu2012A' if options.isData else
-                                                            'START53_V10'),
-                                           maxVersions  = 1 ) )
+    sync53 = '/store/mc/Summer12_DR53X/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola/AODSIM/PU_S10_START53_V7A-v1/0000/FE4C2F81-D0E1-E111-9080-0030487E0A2D.root'
+    defaultFiles = [sync53] if not options.isData else pickRelValInputFiles( cmsswVersion = 'CMSSW_5_3_6',
+                                                                             dataTier     = 'RECO',
+                                                                             relVal       = 'SingleMu',
+                                                                             globalTag    = 'GR_R_53_V15_RelVal_mu2012A',
+                                                                             numberOfFiles = 10
+                                                                             )
     
-    options.files = options.files if options.files else defaultFiles[:10]
+    options.files = options.files if options.files else defaultFiles
     if not options.globalTag : options.globalTag = defaultGT
 
     if not options.quiet : print options
