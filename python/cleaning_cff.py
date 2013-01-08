@@ -9,6 +9,8 @@ scrapingFilter = cms.EDFilter( "FilterOutScraping",
 
 from RecoMET.METAnalyzers.CSCHaloFilter_cfi import CSCTightHaloFilter
 from RecoMET.METFilters.eeBadScFilter_cfi import eeBadScFilter
+from RecoMET.METFilters.ecalLaserCorrFilter_cfi import ecalLaserCorrFilter
+from RecoMET.METFilters.trackingPOGFilters_cff import manystripclus53X,toomanystripclus53X,logErrorTooManyClusters
 
 from CommonTools.RecoAlgos.HBHENoiseFilter_cfi import HBHENoiseFilter
 # s. https://hypernews.cern.ch/HyperNews/CMS/get/JetMET/1196.html
@@ -29,6 +31,10 @@ cleaningMods = ['HBHENoiseFilter',
                 'hcalLaserEventFilter',
                 'EcalDeadCellTriggerPrimitiveFilter',
                 'eeBadScFilter',
+                'ecalLaserCorrFilter',
                 'trackingFailureFilter',
+                '~manystripclus53X',
+                '~toomanystripclus53X',
+                '~logErrorTooManyClusters',
                 'scrapingFilter']
 eventCleaning = cms.Sequence( reduce(operator.add,[eval(mod) for mod in cleaningMods]) )
