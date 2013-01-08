@@ -24,7 +24,7 @@ process.options = cms.untracked.PSet(wantSummary = cms.untracked.bool( not optio
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000 if options.quiet else 10
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32( options.maxEvents ))
 if not options.isData : process.eventCleaning.remove( process.scrapingFilter )
-delattr( process, 'mvaNonTrigV0' )
+for item in ['out','mvaNonTrigV0'] : delattr( process, item )
 
 process.patreco = cms.Path( reduce(operator.add, [getattr(process, item) for item in ['goodOfflinePrimaryVertices',
                                                                                       'eventCleaning',
