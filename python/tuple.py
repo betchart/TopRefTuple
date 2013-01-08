@@ -14,6 +14,7 @@ class Tuple(object) :
                 
     def path(self) :
         return cms.Path( self.events() *
+                         self.exists() *
                          self.gen() *
                          self.triggers() *
                          self.electron() *
@@ -35,6 +36,11 @@ class Tuple(object) :
                                                   vertexTag = tags("goodOfflinePrimaryVertices"))
         return self.empty + self.process.tupleEvents
         
+    def exists(self) :
+        self.process.tupleExists = cms.EDProducer("Tuple_ProductExists",
+                                                  products = tags(["mvaTrigV0"]))
+        return self.empty + self.process.tupleExists
+
     def gen(self) :
         if self.options.isData : return self.empty
         self.process.tupleGen = cms.EDProducer("Tuple_GenParticle",
