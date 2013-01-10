@@ -115,6 +115,7 @@ class TopRefPF2PAT(object) :
             setattr(self.process, idName, id )
             self.patSeq.replace( sel, id*sel*isoEA)
             sel.src = idName
+            isoEA.pfElectrons = 'pfSelectedElectrons'+self.fix
             if not iso3 : isoEA.EffectiveAreaType = "kEleGammaAndNeutralHadronIso04"
             self.show(idName)
         
