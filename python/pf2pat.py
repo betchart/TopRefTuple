@@ -133,7 +133,7 @@ class TopRefPF2PAT(object) :
             val.pfChargedHadrons   = tags( lep+'PFIsoValueCharged03' + pf )
 
         if lep == 'el' and self.doElectronEA :
-            self.attr( 'pfIsolated' + full).deltaBetaIsolationValueMap = tags( self.isoEA )
+            self.attr( 'pfIsolated' + full).deltaBetaIsolationValueMap = self.isoEA
 
         self.show('pfSelected'+full)
         self.show('pfIsolated'+full)
