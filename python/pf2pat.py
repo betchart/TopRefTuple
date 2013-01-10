@@ -40,17 +40,20 @@ class TopRefPF2PAT(object) :
         self.isoValues = {'el':0.15,'mu':0.20}
         self.eleID = 'mvaTrigV0'
         self.minEleID = 0.
-        self.dBFactor = -0.5
+        self.isoEA = 'elPFIsoValueEA03'
+        self.doElectronEA = True
+        self.dBFactorEl = -1.0 if self.doElectronEA else -0.5
+        self.dBFactorMu = -0.5
         self.cuts = {'el': ['abs(eta)<2.5',
                             'pt>20.',
                             'gsfTrackRef.isNonnull',
                             'gsfTrackRef.trackerExpectedHitsInner.numberOfLostHits<2',
-                            '(chargedHadronIso+max(0.,neutralHadronIso+photonIso%+f*puChargedHadronIso))/pt < %f'%(self.dBFactor, self.isoValues['el']),
-                            'electronID("%s") > %f'%(self.eleID,self.minEleID),
+                            '(chargedHadronIso+max(0.,neutralHadronIso+photonIso%+.1f*%s))/pt < %.2f'%(self.dBFactorEl, 'userIsolation("User1Iso")' if self.doElectronEA else 'puChargedHadronIso',self.isoValues['el']),
+                            'electronID("%s") > %.2f'%(self.eleID,self.minEleID),
                             ],
                      'mu' :['abs(eta)<2.5',
                             'pt>10.',
-                            '(chargedHadronIso+neutralHadronIso+photonIso%+f*puChargedHadronIso)/pt < %f'%(self.dBFactor, self.isoValues['mu']),
+                            '(chargedHadronIso+neutralHadronIso+photonIso%+.2f*puChargedHadronIso)/pt < %.2f'%(self.dBFactorMu, self.isoValues['mu']),
                             '(isPFMuon && (isGlobalMuon || isTrackerMuon) )',
                             ],
                      'jet' : ['abs(eta)<2.5', # Careful! these jet cuts affect the typeI met corrections
@@ -97,9 +100,10 @@ class TopRefPF2PAT(object) :
         iso = self.attr('pfIsolated'+full)
         iso.isolationCut = self.isoValues[lep]
         iso.doDeltaBetaCorrection = True
-        iso.deltaBetaFactor = self.dBFactor
+        iso.deltaBetaFactor = getattr(self, 'dBFactor' + full[:2])
         sel = self.attr('pfSelected'+full)
         sel.cut = ' && '.join(self.cuts[lep][:-2])
+        isoEA = getattr(self.process, self.isoEA)
         print >>self.stdout, ""
         if lep == 'el' :
             idName = 'pfIdentifiedElectrons'+self.fix
@@ -109,8 +113,9 @@ class TopRefPF2PAT(object) :
                               electronIdMap = cms.InputTag(self.eleID),
                               electronIdCut = cms.double(self.minEleID))
             setattr(self.process, idName, id )
-            self.patSeq.replace( sel, id*sel)
+            self.patSeq.replace( sel, id*sel*isoEA)
             sel.src = idName
+            if not iso3 : isoEA.EffectiveAreaType = "kEleGammaAndNeutralHadronIso04"
             self.show(idName)
         
         if iso3:
@@ -126,6 +131,9 @@ class TopRefPF2PAT(object) :
             val.pfPUChargedHadrons = tags( lep+'PFIsoValuePU03' + pf )
             val.pfPhotons          = tags( lep+'PFIsoValueGamma03' + pf )
             val.pfChargedHadrons   = tags( lep+'PFIsoValueCharged03' + pf )
+
+        if lep == 'el' and self.doElectronEA :
+            self.attr( 'pfIsolated' + full).deltaBetaIsolationValueMap = tags( self.isoEA )
 
         self.show('pfSelected'+full)
         self.show('pfIsolated'+full)
@@ -144,6 +152,8 @@ class TopRefPF2PAT(object) :
         for mod,attr,val in [('patElectrons','electronIDSources', electronIDSources),
                              ('selectedPatElectrons','cut', ' && '.join(c for c in self.cuts['el'] if 'gsfTrackRef' not in c)),
                              ] : setattr( self.attr( mod+self.fix), attr, val )
+        self.attr('patElectrons'+self.fix).isolationValues.user = tags( [self.isoEA] )
+
         self.show('selectedPatElectrons'+self.fix)
         return
 

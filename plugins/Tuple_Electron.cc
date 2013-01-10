@@ -26,6 +26,7 @@ Tuple_Electron(const edm::ParameterSet& conf)
   produces <std::vector<float> > ( prefix + "NhIso" );
   produces <std::vector<float> > ( prefix + "PhIso" );
   produces <std::vector<float> > ( prefix + "PuIso" );
+  produces <std::vector<float> > ( prefix + "EAIso" );
 
   produces <std::vector<float> > ( prefix + "SuperClusterEta");
   produces <std::vector<bool> >   ( prefix + "PassConversionVeto");
@@ -47,9 +48,10 @@ produce(edm::Event &event, const edm::EventSetup&) {
   std::auto_ptr<std::vector<float> > nhIso ( new std::vector<float>() );
   std::auto_ptr<std::vector<float> > phIso ( new std::vector<float>() );
   std::auto_ptr<std::vector<float> > puIso ( new std::vector<float>() );
+  std::auto_ptr<std::vector<float> > EAIso ( new std::vector<float>() );
 
   std::auto_ptr<std::vector<float> > scEta ( new std::vector<float>() );
-  std::auto_ptr<std::vector<bool> >   passCV ( new std::vector<bool>() );
+  std::auto_ptr<std::vector<bool> >  passCV ( new std::vector<bool>() );
   std::auto_ptr<std::vector<float> > dxy ( new std::vector<float>() );
   std::auto_ptr<std::vector<unsigned> > nHits ( new std::vector<unsigned>() );
 
@@ -72,7 +74,8 @@ produce(edm::Event &event, const edm::EventSetup&) {
       nhIso->push_back( el->neutralHadronIso() );
       phIso->push_back( el->photonIso() );
       puIso->push_back( el->puChargedHadronIso() );
-      relIso->push_back( (chIso->back() + std::max(0., nhIso->back()+phIso->back()-0.5*puIso->back()) ) / el->pt() );
+      EAIso->push_back( el->userIsolation("User1Iso") );
+      relIso->push_back( (chIso->back() + std::max(float(0), nhIso->back()+phIso->back()-EAIso->back()) ) / el->pt() );
       
       scEta->push_back( el->superCluster()->eta() );
       passCV->push_back( el->passConversionVeto() );
@@ -93,6 +96,7 @@ produce(edm::Event &event, const edm::EventSetup&) {
   event.put( nhIso, prefix+"NhIso");
   event.put( phIso, prefix+"PhIso");
   event.put( puIso, prefix+"PuIso");
+  event.put( EAIso, prefix+"EAIso");
   event.put( scEta, prefix+"SuperClusterEta");
   event.put( passCV,prefix+"PassConversionVeto");
   event.put( dxy, prefix+"Dxy");

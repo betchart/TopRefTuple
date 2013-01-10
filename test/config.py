@@ -10,6 +10,7 @@ process.load('Configuration.Geometry.GeometryIdeal_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('EGamma.EGammaAnalysisTools.electronIdMVAProducer_cfi')
+process.load('EGamma.EGammaAnalysisTools.electronIsolatorFromEffectiveArea_cfi')
 process.load('TopQuarkAnalysis.TopRefTuple.vertex_cff')
 process.load('TopQuarkAnalysis.TopRefTuple.cleaning_cff')
 process.source = cms.Source('PoolSource', fileNames = cms.untracked.vstring(options.files) )
@@ -30,6 +31,7 @@ process.patreco = cms.Path( reduce(operator.add, [getattr(process, item) for ite
                                                                                       'eventCleaning',
                                                                                       'mvaTrigV0',
                                                                                       'patPF2PATSequence'+options.postfix]]))
+
 process.load('TopQuarkAnalysis.TopRefTuple.lumi_cfi')
 from TopQuarkAnalysis.TopRefTuple.tuple import Tuple
 process.tuple = Tuple(process, options).path()
