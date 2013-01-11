@@ -28,7 +28,8 @@ class Tuple(object) :
     def tree(self) :
         self.process.topRef = cms.EDAnalyzer( "TreeMaker", outputCommands = cms.untracked.vstring(
             'drop *',
-            'keep *_tuple*_*_*',) )
+            'keep *_tuple*_*_*',
+            'keep double_kt6PFJets_rho_RECO') )
         return self.process.topRef
         
     def events(self) :
