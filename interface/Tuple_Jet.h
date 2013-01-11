@@ -246,6 +246,8 @@ initGen() {
   produces <std::vector<float> > (prefix + "SmearDown");
   produces <std::vector<LorentzV> > (prefix + "GenP4" );
   produces <std::vector<int> > (prefix + "GenFlavor" );
+  produces <std::vector<int> > (prefix + "GenPdgId" );
+  produces <std::vector<int> > (prefix + "GenMotherPdgId" );
 }
 
 
@@ -260,7 +262,7 @@ produceGen(edm::Event& evt, const Handle_t& jets, const Handle_t& all){
   if(all.isValid()) {
     for (typename edm::View<T>::const_iterator jet = all->begin(); jet!=all->end(); ++jet ) {
       const reco::GenJet * gen = jet->genJet();
-      if( !gen || gen->pt() < 15) continue;
+      if( !gen ) continue;
       const int bin( dataMcResRatio.FindFixBin(fabs(gen->eta())) );
       const double
   	c( dataMcResRatio.GetBinContent(bin) ),
@@ -281,10 +283,13 @@ produceGen(edm::Event& evt, const Handle_t& jets, const Handle_t& all){
   std::auto_ptr<std::vector<float> > smear(new std::vector<float>() );
   std::auto_ptr<std::vector<float> > smearu(new std::vector<float>() );
   std::auto_ptr<std::vector<float> > smeard(new std::vector<float>() );
+  std::auto_ptr<std::vector<int> > pdgId(new std::vector<int>() );
+  std::auto_ptr<std::vector<int> > motherPdgId(new std::vector<int>() );
 
   if(jets.isValid()) {
     for (typename edm::View<T>::const_iterator jet = jets->begin(); jet!=jets->end(); ++jet ) {
       const reco::GenJet * gen = jet->genJet();
+      const reco::GenParticle * genP = jet->genParton();
       const int bin( gen ? dataMcResRatio.FindFixBin(fabs(gen->eta())) : -1 );
       const double
 	c( dataMcResRatio.GetBinContent(bin) ),
@@ -297,6 +302,8 @@ produceGen(edm::Event& evt, const Handle_t& jets, const Handle_t& all){
       smear->push_back(  gen ? std::max(0., c  + (1-c ) * pTgOverPt ) : 1.0);
       smearu->push_back( gen ? std::max(0., cu + (1-cu) * pTgOverPt ) : 1.0);
       smeard->push_back( gen ? std::max(0., cd + (1-cd) * pTgOverPt ) : 1.0);
+      pdgId->push_back( genP ? genP->pdgId() : 0.0 );
+      motherPdgId->push_back( genP ? genP->mother()->pdgId() : 0.0 );
     }
   }
   evt.put(     p4, prefix + "GenP4" );
@@ -304,6 +311,8 @@ produceGen(edm::Event& evt, const Handle_t& jets, const Handle_t& all){
   evt.put( smear , prefix + "Smear" );
   evt.put( smearu, prefix + "SmearUp" );
   evt.put( smeard, prefix + "SmearDown" );
+  evt.put( pdgId, prefix + "GenPdgId" );
+  evt.put( motherPdgId, prefix + "GenMotherPdgId" );
 }
 
 #endif
