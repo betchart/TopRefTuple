@@ -12,6 +12,7 @@ def options() :
     options.register('globalTag', mytype = VP.varType.string )
     options.register('postfix','TR', mytype = VP.varType.string )
     options.register('btags', mytype = VP.varType.string, mult = VP.multiplicity.list )
+    options.register('doElectronEA', default = True, mytype = VP.varType.bool)
     options.parseArguments()
     options._tagOrder =[]
 

@@ -41,14 +41,13 @@ class TopRefPF2PAT(object) :
         self.eleID = 'mvaTrigV0'
         self.minEleID = 0.
         self.isoEA = 'elPFIsoValueEA03'
-        self.doElectronEA = True
-        self.dBFactorEl = -1.0 if self.doElectronEA else -0.5
+        self.dBFactorEl = -1.0 if options.doElectronEA else -0.5
         self.dBFactorMu = -0.5
         self.cuts = {'el': ['abs(eta)<2.5',
                             'pt>20.',
                             'gsfTrackRef.isNonnull',
                             'gsfTrackRef.trackerExpectedHitsInner.numberOfLostHits<2',
-                            '(chargedHadronIso+max(0.,neutralHadronIso+photonIso%+.1f*%s))/pt < %.2f'%(self.dBFactorEl, 'userIsolation("User1Iso")' if self.doElectronEA else 'puChargedHadronIso',self.isoValues['el']),
+                            '(chargedHadronIso+max(0.,neutralHadronIso+photonIso%+.1f*%s))/pt < %.2f'%(self.dBFactorEl, 'userIsolation("User1Iso")' if options.doElectronEA else 'puChargedHadronIso',self.isoValues['el']),
                             'electronID("%s") > %.2f'%(self.eleID,self.minEleID),
                             ],
                      'mu' :['abs(eta)<2.5',
@@ -133,7 +132,7 @@ class TopRefPF2PAT(object) :
             val.pfPhotons          = tags( lep+'PFIsoValueGamma03' + pf )
             val.pfChargedHadrons   = tags( lep+'PFIsoValueCharged03' + pf )
 
-        if lep == 'el' and self.doElectronEA :
+        if lep == 'el' and self.options.doElectronEA :
             self.attr( 'pfIsolated' + full).deltaBetaIsolationValueMap = self.isoEA
 
         self.show('pfSelected'+full)
