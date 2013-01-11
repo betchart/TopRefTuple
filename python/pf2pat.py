@@ -55,7 +55,7 @@ class TopRefPF2PAT(object) :
                             '(chargedHadronIso+neutralHadronIso+photonIso%+.2f*puChargedHadronIso)/pt < %.2f'%(self.dBFactorMu, self.isoValues['mu']),
                             '(isPFMuon && (isGlobalMuon || isTrackerMuon) )',
                             ],
-                     'jet' : ['abs(eta)<2.5', # Careful! these jet cuts affect the typeI met corrections
+                     'jet' : ['abs(eta)<2.5',
                               'pt > 15.',
                               # PF jet ID:
                               'numberOfDaughters > 1',
@@ -158,12 +158,16 @@ class TopRefPF2PAT(object) :
         return
 
     def configPatJets(self) :
+        sel = self.attr('selectedPatJets'+self.fix)
+        self.process.selectedPatJetsForAnalysis = sel.clone( cut = ' && '.join(self.cuts['jet']))
+        self.patSeq.replace(sel,sel+self.process.selectedPatJetsForAnalysis)
         for mod,attr,val in [('patJets','discriminatorSources',[tags(tag+'BJetTagsAOD'+self.fix) for tag in self.btags]),
                              ('patJets','tagInfoSources',[tags(tag+'TagInfosAOD'+self.fix) for tag in self.taginfos]),
                              ('patJets','addTagInfos',True),
-                             ('selectedPatJets','cut', ' && '.join(self.cuts['jet'])),
+                             ('selectedPatJets','cut', ' pt > 10'),
                              ] : setattr( self.attr(mod+self.fix), attr, val )
         self.show('selectedPatJets'+self.fix)
+        self.show('selectedPatJetsForAnalysis')
         return
 
     def configLeptonFilter(self) :
@@ -190,7 +194,7 @@ class TopRefPF2PAT(object) :
 
     def removeCruft(self) :
         nothanks = [mod for mod in set(str(self.patSeq).split('+'))
-                    if ( any( keyword in mod for keyword in ['count','Legacy','pfJetsPiZeros','ak7','soft','iterativeCone',
+                    if ( any( keyword in mod for keyword in ['count','Legacy','pfJetsPiZeros','ak7','soft','iterativeCone','pfNoJet',
                                                              'tauIsoDeposit','tauGenJet','hpsPFTau','tauMatch','pfTau','hpsSelection',
                                                              'photonMatch','phPFIso','pfIsolatedPhotons','pfCandsNotInJet','pfCandMETcorr',
                                                              'Negative','ToVertex','particleFlowDisplacedVertex',

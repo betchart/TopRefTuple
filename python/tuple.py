@@ -98,8 +98,8 @@ class Tuple(object) :
         jetResFile = '%s/src/CondFormats/JetMETObjects/data/Spring10_PtResolution_AK5PF.txt'%os.environ['CMSSW_RELEASE_BASE']
         self.process.tupleJet = cms.EDProducer("Tuple_PatJet",
                                                prefix = cms.string("jet"),
-                                               jetsTag = tags("selectedPatJets"+self.options.postfix),
-                                               allJetsTag = tags("patJets"+self.options.postfix),
+                                               jetsTag = tags("selectedPatJetsForAnalysis"),
+                                               allJetsTag = tags("selectedPatJets"+self.options.postfix),
                                                jecRecord = cms.string("AK5PFchs"),
                                                bTags = cms.vstring(self.options.btags),
                                                pfInfo = cms.bool(True),
