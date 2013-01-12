@@ -19,6 +19,7 @@ Tuple_Electron(const edm::ParameterSet& conf)
 {
   produces <bool> (  prefix + "HandleValid");
   produces <std::vector<fTypes::dPolarLorentzV> > ( prefix + "P4" );
+  produces <std::vector<fTypes::dPolarLorentzV> > ( prefix + "P4PF" );
   produces <std::vector<int> > (  prefix + "Charge");
 
   produces <std::vector<float> > ( prefix + "RelIso" );
@@ -41,6 +42,7 @@ Tuple_Electron(const edm::ParameterSet& conf)
 void Tuple_Electron::
 produce(edm::Event &event, const edm::EventSetup&) {
   std::auto_ptr<std::vector<fTypes::dPolarLorentzV> > p4 ( new std::vector<fTypes::dPolarLorentzV>() );
+  std::auto_ptr<std::vector<fTypes::dPolarLorentzV> > p4pf ( new std::vector<fTypes::dPolarLorentzV>() );
   std::auto_ptr<std::vector<int> >           charge ( new std::vector<int>() );
 
   std::auto_ptr<std::vector<float> > relIso( new std::vector<float>() );
@@ -68,7 +70,9 @@ produce(edm::Event &event, const edm::EventSetup&) {
 
   if( electrons.isValid() ) {
     for(els_t::const_iterator el=electrons->begin(); el!=electrons->end(); el++) {
-      p4->push_back(fTypes::dPolarLorentzV(el->pt(), el->eta(), el->phi(), el->mass()));
+      pat::Electron::LorentzVector p4_ = el->ecalDrivenMomentum();
+      p4->push_back(fTypes::dPolarLorentzV(p4_.pt(), p4_.eta(), p4_.phi(), p4_.mass()));
+      p4pf->push_back(fTypes::dPolarLorentzV(el->pt(), el->eta(), el->phi(), el->mass()));
       charge->push_back(el->charge());
       chIso->push_back( el->chargedHadronIso() );
       nhIso->push_back( el->neutralHadronIso() );
@@ -90,6 +94,7 @@ produce(edm::Event &event, const edm::EventSetup&) {
 
   event.put( std::auto_ptr<bool> ( new bool(electrons.isValid() ) ), prefix + "HandleValid" );
   event.put( p4, prefix+"P4" );
+  event.put( p4pf, prefix+"P4PF" );
   event.put( charge, prefix+"Charge");
   event.put( relIso, prefix+"RelIso");
   event.put( chIso, prefix+"ChIso");
