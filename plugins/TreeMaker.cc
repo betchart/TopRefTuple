@@ -33,8 +33,9 @@ TypedBranchConnector(edm::BranchDescription const* desc,
 {
   object_ptr_ = &object_;  
   std::string name = (pin=="") ? ml : pin;
-  if(t!="")  { tree->Branch( name.c_str(),  object_ptr_, (name+t).c_str() );}  //raw type
-  else       { tree->Branch( name.c_str(), &object_ptr_                   );}  //vector<type>
+  if(t.size() && t[0]=='/') { tree->Branch( name.c_str(),             object_ptr_, (name+t).c_str() );}  //raw type
+  else if(t=="")            { tree->Branch( name.c_str(),            &object_ptr_                   );}  //implied by type
+  else                      { tree->Branch( name.c_str(), t.c_str(), &object_ptr_                   );}  //specified by string
 }
 
 void TreeMaker::
@@ -81,7 +82,7 @@ beginJob() {
 	EXPAND(  VECTORD,        fTypes::dVector, "");
 	EXPAND(LORENTZVD,   fTypes::dXYZLorentzV, "");
 	EXPAND(LORENTZVF, fTypes::fPolarLorentzV, "");
-	EXPAND(LORENTZVP, fTypes::dPolarLorentzV, "");
+	EXPAND(LORENTZVP, fTypes::dPolarLorentzV, "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >");
 
 	EXPAND(   BOOL_V, std::vector<          bool>, "");
 	EXPAND(    INT_V, std::vector<           int>, "");
@@ -98,6 +99,7 @@ beginJob() {
 	EXPAND(  VECTORF_V, std::vector       <fTypes::fVector>, "");
 	EXPAND(  VECTORD_V, std::vector       <fTypes::dVector>, "");
 	EXPAND(LORENTZVD_V, std::vector  <fTypes::dXYZLorentzV>, "");
+	//EXPAND(LORENTZVP_V, std::vector<fTypes::dPolarLorentzV>, "vector<ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<Double32_t> > >");
 	EXPAND(LORENTZVP_V, std::vector<fTypes::dPolarLorentzV>, "");
 	EXPAND(LORENTZVF_V, std::vector<fTypes::fPolarLorentzV>, "");
 
