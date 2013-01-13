@@ -11,17 +11,13 @@
 
 struct fTypes {
 
-  typedef ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<float> >       fPoint;
   typedef ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double> >      dPoint;
-  typedef ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<float> >  fVector;
   typedef ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double> > dVector;
-  typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<float> >  fPolarLorentzV;
-  typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > dPolarLorentzV;
   typedef ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >     dXYZLorentzV;
+  typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > dPolarLorentzV;
 
   typedef std::map<std::string,       bool> mapStringBool;
   typedef std::map<std::string,        int> mapStringInt;
-  typedef std::map<std::string,std::string> mapStringString;
 
   enum LEAFTYPE {BOOL=1,  BOOL_V,          
 		 SHORT,   SHORT_V,           
@@ -34,11 +30,9 @@ struct fTypes {
 		 U_LONG,  U_LONG_V,
 		 LORENTZVD,   LORENTZVP,   
 		 LORENTZVD_V, LORENTZVP_V, 
-		 LORENTZVF, LORENTZVF_V,
 		 POINTD,   VECTORD,
 		 POINTD_V, VECTORD_V,
-		 POINTF, POINTF_V, VECTORF, VECTORF_V,
-		 STRING,     STRING_BOOL_M, STRING_INT_M, STRING_STRING_M };
+		 STRING,     STRING_BOOL_M, STRING_INT_M };
 
   static std::map<std::string,LEAFTYPE> dict();
 };

@@ -10,7 +10,7 @@
  *  tree of the selected variables, which it obtains from the EDM
  *  tree.  
  *
- *  $Date: 2012/11/07 21:53:09 $
+ *  $Date: 2012/11/09 18:33:25 $
  *  $Revision: 1.1 $
  *  \author Burt Betchart - University of Rochester <burton.andrew.betchart@cern.ch>
  */
@@ -46,7 +46,7 @@ private:
     T object_;
     T* object_ptr_;
   public:
-    TypedBranchConnector(edm::BranchDescription const*, std::string, TTree*);
+    TypedBranchConnector(edm::BranchDescription const*,  TTree*, std::string t, std::string inc);
     void connect(const edm::Event&);
   };
 

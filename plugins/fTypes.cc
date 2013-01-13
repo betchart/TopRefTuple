@@ -15,25 +15,18 @@ std::map<std::string,fTypes::LEAFTYPE> fTypes::dict() {
   dict["String"] = STRING;
   dict["Stringboolstdmap"] = STRING_BOOL_M;
   dict["Stringintstdmap"]  = STRING_INT_M;
-  dict["StringStringstdmap"]  = STRING_STRING_M;
+
   dict["doubleROOTMathPxPyPzE4DROOTMathLorentzVector"] = LORENTZVD;
   dict["doubleROOTMathPxPyPzE4DROOTMathLorentzVectors"] = LORENTZVD_V;
 
   dict["doubleROOTMathPtEtaPhiM4DROOTMathLorentzVector"] = LORENTZVP;
   dict["doubleROOTMathPtEtaPhiM4DROOTMathLorentzVectors"] = LORENTZVP_V;
 
-  dict["floatROOTMathPtEtaPhiM4DROOTMathLorentzVector"] = LORENTZVF;
-  dict["floatROOTMathPtEtaPhiM4DROOTMathLorentzVectors"] = LORENTZVF_V;
-
   dict["doubleROOTMathCartesian3DROOTMathDefaultCoordinateSystemTagROOTMathPositionVector3D"] = POINTD;
   dict["doubleROOTMathCartesian3DROOTMathDefaultCoordinateSystemTagROOTMathPositionVector3Ds"] = POINTD_V;
-  dict["floatROOTMathCartesian3DROOTMathDefaultCoordinateSystemTagROOTMathPositionVector3D"] = POINTF;
-  dict["floatROOTMathCartesian3DROOTMathDefaultCoordinateSystemTagROOTMathPositionVector3Ds"] = POINTF_V;
 
   dict["doubleROOTMathCartesian3DROOTMathDefaultCoordinateSystemTagROOTMathDisplacementVector3D"] = VECTORD;
   dict["doubleROOTMathCartesian3DROOTMathDefaultCoordinateSystemTagROOTMathDisplacementVector3Ds"] = VECTORD_V;
-  dict["floatROOTMathCartesian3DROOTMathDefaultCoordinateSystemTagROOTMathDisplacementVector3D"] = VECTORF;
-  dict["floatROOTMathCartesian3DROOTMathDefaultCoordinateSystemTagROOTMathDisplacementVector3Ds"] = VECTORF_V;
 
   return dict;
 }

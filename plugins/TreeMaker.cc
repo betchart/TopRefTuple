@@ -7,6 +7,7 @@
 #include "DataFormats/Provenance/interface/Selections.h"
 
 #include "boost/foreach.hpp"
+#include "TInterpreter.h"
 
 void TreeMaker::
 analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
@@ -26,8 +27,9 @@ connect(const edm::Event& iEvent) {
 template <class T> 
 TreeMaker::TypedBranchConnector<T>::
 TypedBranchConnector(edm::BranchDescription const* desc, 
-		     std::string t, 
-		     TTree * tree)
+		     TTree * tree, 
+		     std::string t,
+		     std::string inc)
   :  ml( desc->moduleLabel() ),  
      pin( desc->productInstanceName() )
 {
@@ -35,7 +37,8 @@ TypedBranchConnector(edm::BranchDescription const* desc,
   std::string name = (pin=="") ? ml : pin;
   if(t.size() && t[0]=='/') { tree->Branch( name.c_str(),             object_ptr_, (name+t).c_str() );}  //raw type
   else if(t=="")            { tree->Branch( name.c_str(),            &object_ptr_                   );}  //implied by type
-  else                      { tree->Branch( name.c_str(), t.c_str(), &object_ptr_                   );}  //specified by string
+  else                      { gInterpreter->GenerateDictionary(t.c_str(),inc.c_str());
+                              tree->Branch( name.c_str(), t.c_str(), &object_ptr_                   );}  //specified by string
 }
 
 void TreeMaker::
@@ -64,48 +67,40 @@ beginJob() {
       
       //Create TreeMaker branch
       switch(dict.find( selection->friendlyClassName() )->second) {
-#define EXPAND(enumT,typeT,charT) case fTypes::enumT : connectors.push_back( new TypedBranchConnector<typeT >(selection,charT,tree)); break
-	EXPAND(   BOOL,           bool, "/O");
-	EXPAND(    INT,            int, "/I");
-	EXPAND(  U_INT,       unsigned, "/i");
-	EXPAND(  SHORT,          short, "/S");
-	EXPAND(U_SHORT, unsigned short, "/s");
-	EXPAND(  FLOAT,          float, "/F");
-	EXPAND( DOUBLE,         double, "/D");
-	EXPAND(   LONG,           long, "/L");
-	EXPAND( U_LONG,  unsigned long, "/l");
+#define EXPAND(enumT,typeT,charT,incT) case fTypes::enumT : connectors.push_back( new TypedBranchConnector<typeT >(selection,tree,charT,incT)); break
+	EXPAND(   BOOL,           bool, "/O","");
+	EXPAND(    INT,            int, "/I","");
+	EXPAND(  U_INT,       unsigned, "/i","");
+	EXPAND(  SHORT,          short, "/S","");
+	EXPAND(U_SHORT, unsigned short, "/s","");
+	EXPAND(  FLOAT,          float, "/F","");
+	EXPAND( DOUBLE,         double, "/D","");
+	EXPAND(   LONG,           long, "/L","");
+	EXPAND( U_LONG,  unsigned long, "/l","");
 
-	EXPAND(   STRING,            std::string, "");
-	EXPAND(   POINTF,         fTypes::fPoint, "");
-	EXPAND(   POINTD,         fTypes::dPoint, "");
-	EXPAND(  VECTORF,        fTypes::fVector, "");
-	EXPAND(  VECTORD,        fTypes::dVector, "");
-	EXPAND(LORENTZVD,   fTypes::dXYZLorentzV, "");
-	EXPAND(LORENTZVF, fTypes::fPolarLorentzV, "");
-	EXPAND(LORENTZVP, fTypes::dPolarLorentzV, "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >");
+	EXPAND(   STRING,            std::string, "", "");
+	EXPAND(   POINTD,         fTypes::dPoint, "", "");
+	EXPAND(  VECTORD,        fTypes::dVector, "", "");
+	EXPAND(LORENTZVD,   fTypes::dXYZLorentzV, "", "");
+	EXPAND(LORENTZVP, fTypes::dPolarLorentzV, "", "");
 
-	EXPAND(   BOOL_V, std::vector<          bool>, "");
-	EXPAND(    INT_V, std::vector<           int>, "");
-	EXPAND(  U_INT_V, std::vector<      unsigned>, "");
-	EXPAND(  SHORT_V, std::vector<         short>, "");
-	EXPAND(U_SHORT_V, std::vector<unsigned short>, "");
-	EXPAND(  FLOAT_V, std::vector<         float>, "");
-	EXPAND( DOUBLE_V, std::vector<        double>, "");
-	EXPAND(   LONG_V, std::vector<          long>, "");
-	EXPAND( U_LONG_V, std::vector< unsigned long>, "");
+	EXPAND(   BOOL_V, std::vector<          bool>, "", "");
+	EXPAND(    INT_V, std::vector<           int>, "", "");
+	EXPAND(  U_INT_V, std::vector<      unsigned>, "", "");
+	EXPAND(  SHORT_V, std::vector<         short>, "", "");
+	EXPAND(U_SHORT_V, std::vector<unsigned short>, "", "");
+	EXPAND(  FLOAT_V, std::vector<         float>, "", "");
+	EXPAND( DOUBLE_V, std::vector<        double>, "", "");
+	EXPAND(   LONG_V, std::vector<          long>, "", "");
+	EXPAND( U_LONG_V, std::vector< unsigned long>, "", "");
 
-	EXPAND(   POINTF_V, std::vector        <fTypes::fPoint>, "");
-	EXPAND(   POINTD_V, std::vector        <fTypes::dPoint>, "");
-	EXPAND(  VECTORF_V, std::vector       <fTypes::fVector>, "");
-	EXPAND(  VECTORD_V, std::vector       <fTypes::dVector>, "");
-	EXPAND(LORENTZVD_V, std::vector  <fTypes::dXYZLorentzV>, "");
-	//EXPAND(LORENTZVP_V, std::vector<fTypes::dPolarLorentzV>, "vector<ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<Double32_t> > >");
-	EXPAND(LORENTZVP_V, std::vector<fTypes::dPolarLorentzV>, "");
-	EXPAND(LORENTZVF_V, std::vector<fTypes::fPolarLorentzV>, "");
+	EXPAND(   POINTD_V, std::vector        <fTypes::dPoint>, "", "");
+	EXPAND(  VECTORD_V, std::vector       <fTypes::dVector>, "", "");
+	EXPAND(LORENTZVD_V, std::vector  <fTypes::dXYZLorentzV>, "", "");
+	EXPAND(LORENTZVP_V, std::vector<fTypes::dPolarLorentzV>, "vector<ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<Double32_t> > >","vector;Math/LorentzVector.h");
 
-	EXPAND(  STRING_BOOL_M, fTypes::mapStringBool   , "");
-	EXPAND(   STRING_INT_M, fTypes::mapStringInt    , "");
-	EXPAND(STRING_STRING_M, fTypes::mapStringString , "");
+	EXPAND(  STRING_BOOL_M, fTypes::mapStringBool   , "", "");
+	EXPAND(   STRING_INT_M, fTypes::mapStringInt    , "", "");
 #undef EXPAND
       default: 
 	{
