@@ -82,7 +82,7 @@ produce(edm::Event &event, const edm::EventSetup&) {
       nhIso->push_back( mu->neutralHadronIso() );
       phIso->push_back( mu->photonIso() );
       puIso->push_back( mu->puChargedHadronIso() );
-      relIso->push_back( (chIso->back() + nhIso->back() + phIso->back() -0.5*puIso->back() ) / mu->pt() );
+      relIso->push_back( (chIso->back() + std::max(0., nhIso->back() + phIso->back() -0.5*puIso->back()) ) / mu->pt() );
       
       isGlobal->push_back(mu->isGlobalMuon());
       isTracker->push_back(mu->isTrackerMuon());

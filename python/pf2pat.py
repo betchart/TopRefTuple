@@ -52,7 +52,7 @@ class TopRefPF2PAT(object) :
                             ],
                      'mu' :['abs(eta)<2.5',
                             'pt>10.',
-                            '(chargedHadronIso+neutralHadronIso+photonIso%+.2f*puChargedHadronIso)/pt < %.2f'%(self.dBFactorMu, self.isoValues['mu']),
+                            '(chargedHadronIso+max(0.,neutralHadronIso+photonIso%+.2f*puChargedHadronIso))/pt < %.2f'%(self.dBFactorMu, self.isoValues['mu']),
                             '(isPFMuon && (isGlobalMuon || isTrackerMuon) )',
                             ],
                      'jet' : ['abs(eta)<2.5',
