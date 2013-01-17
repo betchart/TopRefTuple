@@ -63,19 +63,19 @@ def setup_crab(job,option) :
              "LONDON" : {"SE":"T2_UK_London_IC",
                          "FULL_RPATH":"/pnfs/hep.ph.ic.ac.uk/data/cms/store/user/%(USER)s/%(RPATH)s" % option,
                          "USER_REMOTE":"%(RPATH)s",
-                         "SCHEDULER":"glidein",
+                         "SCHEDULER":"remoteGlidein",
                          "DBS_URL": option["DBS_URL"],
                          "EXTRA": ""},
              "OSETHACK" : {"SE":"T2_UK_London_IC",
                            "FULL_RPATH":"/pnfs/hep.ph.ic.ac.uk/data/cms/store/user/%(USER)s/%(RPATH)s" % option,
                            "USER_REMOTE":"%(RPATH)s",
-                           "SCHEDULER":"glidein",
+                           "SCHEDULER":"remoteGlidein",
                            "DBS_URL": "http://cmsdbsprod.cern.ch/cms_dbs_ph_analysis_02/servlet/DBSServlet",
                            "EXTRA": "[CRAB]\nserver_name=slc5ucsd\n[GRID]\nse_white_list=T1,T2\nce_white_list=T1,T2\n"},
               "FNAL" : {"SE":"cmssrm.fnal.gov",
               		"FULL_RPATH":"/pnfs/cms/WAX/11/store/user/lpcsusyra1/%(USER)s/%(RPATH)s" % option,
               		"USER_REMOTE":"/store/user/lpcsusyra1/%(USER)s/%(RPATH)s",
-              		"SCHEDULER":"glidein",
+              		"SCHEDULER":"remoteGlidein",
                         "DBS_URL": option["DBS_URL"],
                         "EXTRA":""}
              }
@@ -112,9 +112,6 @@ pset=topTuple_cfg.py
 datasetpath=%(DATASET)s
 %(DBS_URL)s
 
-[GRID]
-virtual_organization=cms
-
 [USER]
 copy_data=1
 user_remote_dir=%(USER_REMOTE)s
@@ -125,7 +122,7 @@ additional_input_files=*.txt
 [CRAB]
 cfg=crab.cfg
 scheduler=%(SCHEDULER)s
-use_server=%(SERVER)d
+use_server=0
 jobtype=cmssw
 
 %(EXTRA)s
@@ -178,7 +175,6 @@ def get_options(name) :
     print "Choose output site:"
     for site in ["CASTOR","CAF","LONDON","OSETHACK", "FNAL"] : print '\t'+site
     option["SITE"] = raw_input("\t> ")
-    option["SERVER"] = True if raw_input('Run Jobs via Server? [y/n]  ') in ['Y','y',1] else False
     option["USER"] = getpass.getuser()
     option["NODE"] = socket.gethostname()
     option["PATH"] = '/'.join(['','tmp',option['USER'],name,timestamp,''])
@@ -189,7 +185,7 @@ def get_options(name) :
     option["DBS_URL"] = None
 
     print 'You have specified:'
-    for key in ["SITE","SERVER"]:  print "%s : %s"%( key, str(option[key]))
+    for key in ["SITE"]:  print "%s : %s"%( key, str(option[key]))
     return option
 
 db = conf.lockedDB()
