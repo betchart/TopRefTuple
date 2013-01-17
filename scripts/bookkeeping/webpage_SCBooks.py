@@ -132,12 +132,15 @@ def print_DSET(file,db,dset,recipe,gT) :
     label= 'dset%d_%s' % (dset['rowid'],recipe)
     jobs = db.execute('select rowid,* from job where dsetid=? and recipe=? and globalTag=? order by user',(dset['rowid'],recipe,gT)).fetchall()
     if len(jobs)>0 :
+        state = min([j['state'] for j in jobs], key = lambda k : {"Unclaimed":0, "Processing":1, "Complete":2}[k])
         print>>file,'\n'.join([
             '''<script type="text/javascript"><!--
             dsetSwitches.push(\'%s\');//-->
             </script>'''%label,
             '<br><a onclick="switchMenu(\'%s\');">' % label,
+            '<div><div class="%s" style="float:left;">|%s_</div>'%(state,"<br>|"*dset['dataset'].count(',')),
             '<b>%s</b>' % dset['dataset'].replace(",","<br>"),
+            '</div>',
             '</a>',
             '<div id="%s" class=dsetwrapper>' % label,
             ])
