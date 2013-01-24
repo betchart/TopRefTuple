@@ -117,7 +117,7 @@ copy_data=1
 user_remote_dir=%(USER_REMOTE)s
 storage_element=%(SE)s
 %(FNAL_SPECIFIC)s
-additional_input_files=*.txt
+additional_input_files=*.txt,AutoDict*
 
 [CRAB]
 cfg=crab.cfg

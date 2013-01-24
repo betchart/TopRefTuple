@@ -30,6 +30,8 @@ class Tuple(object) :
             'drop *',
             'keep *_tuple*_*_*',
             'keep double_kt6PFJets_rho_RECO') )
+        import ROOT as r # precompile the dictionary to ship with CRAB
+        r.gInterpreter.GenerateDictionary('vector<ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<Double32_t> > >','vector;Math/LorentzVector.h')
         return self.process.topRef
         
     def events(self) :
