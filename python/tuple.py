@@ -63,7 +63,6 @@ class Tuple(object) :
         return self.empty + self.process.tupleGen + self.process.tuplePileup
 
     def triggers(self) :
-        if not self.options.isData : return self.empty
         self.process.tupleTriggers = cms.EDProducer("Tuple_Triggers",
                                                     InputTag = tags('TriggerResults'),
                                                     TriggerEventInputTag = tags('hltTriggerSummaryAOD'),
