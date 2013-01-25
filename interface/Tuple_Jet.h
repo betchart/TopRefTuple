@@ -160,12 +160,15 @@ initPF() {
   produces <std::vector<unsigned> > (prefix + "Ncharged" );
   produces <std::vector<unsigned> > (prefix + "Nneutral" );
   produces <std::vector<unsigned> > (prefix + "Nmuon" );
+  produces <std::vector<unsigned> > (prefix + "Nelectron" );
   produces <std::vector<unsigned> > (prefix + "Ndaughters" );
   
   produces <std::vector<bool> > ( prefix + "PFJetIDloose"   );
   produces <std::vector<bool> > ( prefix + "PFJetIDtight"   );
   produces <float> ( prefix + "FailedPtMax");
 
+  produces <std::vector<int> > (prefix + "MuonsChargeSum" );
+  produces <std::vector<int> > (prefix + "ElectronsChargeSum" );
 }
 
 template<class T> void Tuple_Jet<T>::
@@ -179,11 +182,15 @@ producePF(edm::Event& evt, const Handle_t& jets, const Handle_t& all) {
   std::auto_ptr<std::vector<unsigned> > Ncharged( new std::vector<unsigned>() );
   std::auto_ptr<std::vector<unsigned> > Nneutral( new std::vector<unsigned>() );
   std::auto_ptr<std::vector<unsigned> > Nmuon( new std::vector<unsigned>() );
+  std::auto_ptr<std::vector<unsigned> > Nelectron( new std::vector<unsigned>() );
   std::auto_ptr<std::vector<unsigned> > Ndaughters( new std::vector<unsigned>() );
 
   std::auto_ptr<std::vector<bool> >  pfjetidloose  ( new std::vector<bool>()  ) ;
   std::auto_ptr<std::vector<bool> >  pfjetidtight  ( new std::vector<bool>()  ) ;
   std::auto_ptr<float>  failedPt  ( new float(-1)  )  ;
+
+  std::auto_ptr<std::vector<int> > muonsChargeSum ( new std::vector<int>() ) ;
+  std::auto_ptr<std::vector<int> > electronsChargeSum ( new std::vector<int>() ) ;
 
   PFJetIDSelectionFunctor
     pfLooseJetID(PFJetIDSelectionFunctor::FIRSTDATA, PFJetIDSelectionFunctor::LOOSE),
@@ -203,10 +210,25 @@ producePF(edm::Event& evt, const Handle_t& jets, const Handle_t& all) {
       Ncharged->push_back( (unsigned) jet->chargedMultiplicity() );
       Nneutral->push_back( (unsigned) jet->neutralMultiplicity() );
       Nmuon->push_back( (unsigned) jet->muonMultiplicity() );
+      Nelectron->push_back( (unsigned) jet->electronMultiplicity() );
       Ndaughters->push_back( (unsigned) jet->numberOfDaughters() );
       
       pfjetidloose->push_back(pfLooseJetID( *jet, passLooseCuts  ));
       pfjetidtight->push_back(pfTightJetID( *jet, passTightCuts  ));
+      
+      muonsChargeSum->push_back( 0 ) ;
+      electronsChargeSum->push_back( 0 ) ;
+      for(unsigned nMoreMu(Nmuon->back()),nMoreEl(Nelectron->back()), i(0); nMoreMu || nMoreEl; i++) {
+	int pdgId = jet->getPFConstituent(i)->pdgId();
+	if(abs(pdgId)==13) {
+	  nMoreMu--;
+	  muonsChargeSum->back() += (pdgId>0 ? 1 : -1) ;
+	}
+	if(abs(pdgId)==11) {
+	  nMoreEl--;
+	  electronsChargeSum->back() += (pdgId>0 ? 1 : -1) ;
+	}
+      }
     }
   }
   if(all.isValid()) {
@@ -225,12 +247,15 @@ producePF(edm::Event& evt, const Handle_t& jets, const Handle_t& all) {
   evt.put(Ncharged,    prefix + "Ncharged"    );
   evt.put(Nneutral,    prefix + "Nneutral"    );
   evt.put(Nmuon,       prefix + "Nmuon"       );
+  evt.put(Nelectron,   prefix + "Nelectron"   );
   evt.put(Ndaughters,  prefix + "Ndaughters"  );
  
   evt.put( pfjetidloose,  prefix + "PFJetIDloose"   );
   evt.put( pfjetidtight,  prefix + "PFJetIDtight"   );
   evt.put( failedPt,  prefix + "FailedPtMax" );
 
+  evt.put( muonsChargeSum, prefix + "MuonsChargeSum" );
+  evt.put( electronsChargeSum, prefix + "ElectronsChargeSum" );
 }
 
 
