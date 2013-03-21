@@ -7,6 +7,7 @@ def options() :
     options.maxEvents = 100
     
     options.register('isData', default = True, mytype = VP.varType.bool)
+    options.register('isFastSim', default = False, mytype = VP.varType.bool)
     options.register('quiet', default = True, mytype = VP.varType.bool)
     options.register('requireLepton', default = True, mytype = VP.varType.bool)
     options.register('globalTag', mytype = VP.varType.string )
