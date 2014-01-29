@@ -27,9 +27,10 @@ def setup_cmssw(job,path) :
     print_and_execute('\n'.join(["#!/usr/bin/env bash",
                                  "mkdir -p %s"%path,
                                  "cd %s"%path,
-                                 "cvs co -drecipes -r %s UserCode/Betchart/TopRefTuple/scripts/recipe.sh"%job['recipe'],
-                                 "cat recipes/recipe.sh",
-                                 ". recipes/recipe.sh",
+                                 "git clone --branch %s -n https://github.com/betchart/TopRefTuple.git recipe --depth 1"%job['recipe'],
+                                 "cd recipes; git reset HEAD scripts/recipe.sh; git checkout scripts/recipe.sh; cd -"
+                                 "cat recipes/scripts/recipe.sh",
+                                 ". recipes/scripts/recipe.sh",
                                  "scram b -j 8",
                                  'echo "\n\n\nCheck that everything built:"',
                                  'scram b']))
@@ -73,9 +74,10 @@ def setup_crab(job,option) :
                            "DBS_URL": "http://cmsdbsprod.cern.ch/cms_dbs_ph_analysis_02/servlet/DBSServlet",
                            "EXTRA": "[CRAB]\nserver_name=slc5ucsd\n[GRID]\nse_white_list=T1,T2\nce_white_list=T1,T2\n"},
               "FNAL" : {"SE":"cmssrm.fnal.gov",
-              		"FULL_RPATH":"/pnfs/cms/WAX/11/store/user/lpcsusyra1/%(USER)s/%(RPATH)s" % option,
-              		"USER_REMOTE":"/store/user/lpcsusyra1/%(USER)s/%(RPATH)s",
+              		"FULL_RPATH":"/pnfs/cms/WAX/11/store/user/%(USER)s/%(RPATH)s" % option,
+              		"USER_REMOTE":"/store/user/%(USER)s/%(RPATH)s",
               		"SCHEDULER":"remoteGlidein",
+              		#"SCHEDULER":"glite",
                         "DBS_URL": option["DBS_URL"],
                         "EXTRA":""}
              }

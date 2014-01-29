@@ -1,12 +1,16 @@
-RELEASE=CMSSW_5_3_8
+export RELEASE=CMSSW_5_3_13
 scram project CMSSW $RELEASE
 cd $RELEASE/src
 eval `scram runtime -sh`
-addpkg RecoMET/METFilters V00-00-13
-addpkg RecoMET/METAnalyzers  V00-00-08
-addpkg DPGAnalysis/SiStripTools V00-11-17
-cvs co -r V00-03-02 -d TopQuarkAnalysis/TopRefTuple UserCode/Betchart/TopRefTuple
-cvs co -r V00-00-31-EA02 -d EGamma/EGammaAnalysisTools UserCode/EGamma/EGammaAnalysisTools
-cd EGamma/EGammaAnalysisTools/data
+export CVSROOT=:ext:bbetchar@lxplus.cern.ch:/afs/cern.ch/user/c/cvscmssw/public/CMSSW
+
+git cms-addpkg EgammaAnalysis/ElectronTools CMSSW_5_3_13
+cd EgammaAnalysis/ElectronTools/data/
 cat download.url | xargs wget
 cd -
+
+cvs co -r V00-00-13 RecoMET/METFilters
+cvs co -r V00-00-08 RecoMET/METAnalyzers
+cvs co -r V00-11-17 DPGAnalysis/SiStripTools
+
+git clone --branch V00-03-02 https://github.com/betchart/TopRefTuple.git TopQuarkAnalysis/TopRefTuple
