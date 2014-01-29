@@ -157,7 +157,7 @@ def print_TAG(file,db,tag) :
         </script>'''%label,
         '<a onclick="switchMenu(\'%s\');">' % label,
         '<b> TopRefTuple recipe %s'%(tag['recipe']),
-        '</a><a href="%s">*==></a>'%("http://cmssw.cvs.cern.ch/cgi-bin/cmssw.cgi/UserCode/Betchart/TopRefTuple/scripts/recipe.sh?revision=%s&view=markup"%tag['recipe']),
+        '</a><a href="%s">*==></a>'%("https://github.com/betchart/TopRefTuple/blob/%s/scripts/recipe.sh"%tag['recipe']),
         '<div id="%s" class=tagwrapper>' % label,
         ])
     
