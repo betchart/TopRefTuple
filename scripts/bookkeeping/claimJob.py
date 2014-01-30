@@ -27,10 +27,9 @@ def setup_cmssw(job,path) :
     print_and_execute('\n'.join(["#!/usr/bin/env bash",
                                  "mkdir -p %s"%path,
                                  "cd %s"%path,
-                                 "git clone --branch %s -n https://github.com/betchart/TopRefTuple.git recipe --depth 1"%job['recipe'],
-                                 "cd recipes; git reset HEAD scripts/recipe.sh; git checkout scripts/recipe.sh; cd -"
-                                 "cat recipes/scripts/recipe.sh",
-                                 ". recipes/scripts/recipe.sh",
+                                 "wget --no-check-certificate https://raw.github.com/betchart/TopRefTuple/%s/scripts/recipe.sh"%job['recipe'],
+                                 "cat recipe.sh",
+                                 ". recipe.sh",
                                  "scram b -j 8",
                                  'echo "\n\n\nCheck that everything built:"',
                                  'scram b']))
