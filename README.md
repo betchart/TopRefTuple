@@ -9,4 +9,5 @@ CMSSW usercode for producing ntuples compatible with [TOP PAG reference selectio
         ```scram b -j<N>```
 3. Make the [test/config.py](https://github.com/betchart/TopRefTuple/blob/master/test/config.py) reference ntuple:
         ```cmsRun TopQuarkAnalysis/TopRefTuple/test/config.py```
-
+
+Command line options for ```config.py``` may be of interest: [python/options.py](https://github.com/betchart/TopRefTuple/blob/master/python/options.py)
