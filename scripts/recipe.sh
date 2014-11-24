@@ -4,7 +4,8 @@ cd $RELEASE/src
 eval `scram runtime -sh`
 export CVSROOT=:ext:bbetchar@lxplus.cern.ch:/afs/cern.ch/user/c/cvscmssw/public/CMSSW
 
-git cms-addpkg EgammaAnalysis/ElectronTools CMSSW_5_3_13
+#git cms-addpkg EgammaAnalysis/ElectronTools CMSSW_5_3_13
+git cms-addpkg EgammaAnalysis/ElectronTools
 cd EgammaAnalysis/ElectronTools/data/
 cat download.url | xargs wget
 cd -

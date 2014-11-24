@@ -72,8 +72,8 @@ def setup_crab(job,option) :
                            "SCHEDULER":"remoteGlidein",
                            "DBS_URL": "http://cmsdbsprod.cern.ch/cms_dbs_ph_analysis_02/servlet/DBSServlet",
                            "EXTRA": "[CRAB]\nserver_name=slc5ucsd\n[GRID]\nse_white_list=T1,T2\nce_white_list=T1,T2\n"},
-              "FNAL" : {"SE":"cmssrm.fnal.gov",
-              		"FULL_RPATH":"/pnfs/cms/WAX/11/store/user/%(USER)s/%(RPATH)s" % option,
+              "FNAL" : {"SE":"cmseos.fnal.gov",
+              		"FULL_RPATH":"/eos/uscms/store/user/%(USER)s/%(RPATH)s" % option,
               		"USER_REMOTE":"/store/user/%(USER)s/%(RPATH)s",
               		"SCHEDULER":"remoteGlidein",
               		#"SCHEDULER":"glite",
@@ -102,8 +102,8 @@ def setup_crab(job,option) :
         with open("%(PATH)s/jsonls.txt"%option,"w") as jsonfile:
             print>>jsonfile,str(job['jsonls']).replace("'",'"')
 
-    option["FNAL_SPECIFIC"] = "" if option['SITE'] != "FNAL" else '\n'.join(['check_user_remote_dir = 0',
-                                                                             'storage_path = /srm/managerv2?SFN=11'])
+#    option["FNAL_SPECIFIC"] = "" if option['SITE'] != "FNAL" else '\n'.join(['check_user_remote_dir = 0',
+#                                                                             'storage_path = /srm/managerv2?SFN=11'])
     with open("%(PATH)s/crab.cfg"%option,"w") as crabfile :
         print>>crabfile,'''
 [CMSSW]
@@ -158,7 +158,8 @@ python %(path)s/CMSSW_*/src/TopQuarkAnalysis/TopRefTuple/test/config.py isData=%
       "gt" : job['globalTag'],
       "other" : job['nonDefault'] if job['nonDefault'] else '',
       "crab" : "multicrab" if MULTI else "crab",
-      "crab_setup" : "/afs/cern.ch/cms/ccs/wm/scripts/Crab/crab.sh",
+      #"crab_setup" : "/afs/cern.ch/cms/ccs/wm/scripts/Crab/crab.sh",
+      "crab_setup" : "/bin/true",
       "doit" : "" if onlyTest else "-submit"
       })
     return
