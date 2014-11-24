@@ -13,7 +13,7 @@ cvs co -r V00-00-13 RecoMET/METFilters
 cvs co -r V00-00-08 RecoMET/METAnalyzers
 cvs co -r V00-11-17 DPGAnalysis/SiStripTools
 
-git clone --branch V00-04-02 https://github.com/betchart/TopRefTuple.git TopQuarkAnalysis/TopRefTuple
+git clone --branch V00-04-04 https://github.com/betchart/TopRefTuple.git TopQuarkAnalysis/TopRefTuple
 
 scram b -j 8
 echo "\n\n\nCheck that everything built:"
