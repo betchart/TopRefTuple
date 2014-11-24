@@ -15,4 +15,9 @@ cvs co -r V00-11-17 DPGAnalysis/SiStripTools
 
 git clone --branch V00-04-02 https://github.com/betchart/TopRefTuple.git TopQuarkAnalysis/TopRefTuple
 
-### git cms-addpkg EgammaAnalysis/ElectronTools CMSSW_5_3_13
+scram b -j 8
+echo "\n\n\nCheck that everything built:"
+scram b
+
+### git cms-addpkg EgammaAnalysis/ElectronTools CMSSW_5_3_13 # this command is failing in an undocumented way, doesn't like the tag specification, and fails when called from python environment.
+

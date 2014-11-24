@@ -29,10 +29,7 @@ def setup_cmssw(job,path) :
                                  "cd %s"%path,
                                  "wget --no-check-certificate https://raw.github.com/betchart/TopRefTuple/%s/scripts/recipe.sh"%job['recipe'],
                                  "cat recipe.sh",
-                                 ". recipe.sh",
-                                 "scram b -j 8",
-                                 'echo "\n\n\nCheck that everything built:"',
-                                 'scram b']))
+                                 "bash recipe.sh"]))
 
 def setup_output_dirs(option) :
     dirs = option["FULL_RPATH"].strip('/').split('/')
