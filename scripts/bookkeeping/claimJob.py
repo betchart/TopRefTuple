@@ -99,8 +99,8 @@ def setup_crab(job,option) :
         with open("%(PATH)s/jsonls.txt"%option,"w") as jsonfile:
             print>>jsonfile,str(job['jsonls']).replace("'",'"')
 
-#    option["FNAL_SPECIFIC"] = "" if option['SITE'] != "FNAL" else '\n'.join(['check_user_remote_dir = 0',
-#                                                                             'storage_path = /srm/managerv2?SFN=11'])
+    option["FNAL_SPECIFIC"] = "" if option['SITE'] != "FNAL" or True else '\n'.join(['check_user_remote_dir = 0',
+                                                                                     'storage_path = /srm/managerv2?SFN=11'])
     with open("%(PATH)s/crab.cfg"%option,"w") as crabfile :
         print>>crabfile,'''
 [CMSSW]
@@ -109,6 +109,8 @@ get_edm_output = 1
 pset=topTuple_cfg.py
 datasetpath=%(DATASET)s
 %(DBS_URL)s
+allow_NonProductionCMSSW = 1
+
 
 [USER]
 copy_data=1
@@ -141,7 +143,7 @@ def run_crab(job,path,MULTI,onlyTest) :
     print_and_execute('''
 #!/usr/bin/env bash
     
-source /afs/cern.ch/cms/LCG/LCG-2/UI/cms_ui_env.sh
+# source /afs/cern.ch/cms/LCG/LCG-2/UI/cms_ui_env.sh
 cd %(path)s/CMSSW_*/src/
 eval `scram runtime -sh`
 source %(crab_setup)s
@@ -155,8 +157,7 @@ python %(path)s/CMSSW_*/src/TopQuarkAnalysis/TopRefTuple/test/config.py isData=%
       "gt" : job['globalTag'],
       "other" : job['nonDefault'] if job['nonDefault'] else '',
       "crab" : "multicrab" if MULTI else "crab",
-      #"crab_setup" : "/afs/cern.ch/cms/ccs/wm/scripts/Crab/crab.sh",
-      "crab_setup" : "/bin/true",
+      "crab_setup" : "/afs/cern.ch/cms/ccs/wm/scripts/Crab/crab.sh",
       "doit" : "" if onlyTest else "-submit"
       })
     return
