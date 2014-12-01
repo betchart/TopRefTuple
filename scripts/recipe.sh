@@ -1,4 +1,13 @@
 export RELEASE=CMSSW_5_3_13
+
+SITE=`uname -n | awk -F'.' '{print $2}'`
+if [ $SITE == "fnal" ]
+    then
+      echo 'This is FNAL'
+      source /cvmfs/cms.cern.ch/cmsset_default.sh
+      source /uscmst1/prod/grid/gLite_SL5.sh
+fi
+
 scram project CMSSW $RELEASE
 cd $RELEASE/src
 eval `scram runtime -sh`
