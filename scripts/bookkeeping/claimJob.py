@@ -109,8 +109,6 @@ get_edm_output = 1
 pset=topTuple_cfg.py
 datasetpath=%(DATASET)s
 %(DBS_URL)s
-allow_NonProductionCMSSW = 1
-
 
 [USER]
 copy_data=1
