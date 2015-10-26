@@ -102,6 +102,7 @@ class Tuple(object) :
                                                jetsTag = tags("selectedPatJetsForAnalysis"),
                                                allJetsTag = tags("selectedPatJets"+self.options.postfix),
                                                jecRecord = cms.string("AK5PFchs"),
+                                               jecNames = cms.vstring([""]),
                                                bTags = cms.vstring(self.options.btags),
                                                pfInfo = cms.bool(True),
                                                genInfo = cms.bool( not self.options.isData),
