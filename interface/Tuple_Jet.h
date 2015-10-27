@@ -18,10 +18,14 @@
 #include "TH1D.h"
 
 
-JetCorrectionUncertainty* jetCorrUnc(const edm::EventSetup& setup, const std::string& jecRecord) {
-  edm::ESHandle<JetCorrectorParametersCollection> JetCorParColl;
-  setup.get<JetCorrectionsRecord>().get(jecRecord,JetCorParColl);
-  return new JetCorrectionUncertainty((*JetCorParColl)["Uncertainty"]);
+JetCorrectionUncertainty* jetCorrUnc(const edm::EventSetup& setup, const std::string& jecRecord, const std::string fileName, const std::string& jecName) {
+  if(jecName=="") {
+    edm::ESHandle<JetCorrectorParametersCollection> JetCorParColl;
+    setup.get<JetCorrectionsRecord>().get(jecRecord,JetCorParColl);
+    return new JetCorrectionUncertainty((*JetCorParColl)["Uncertainty"]);
+  }
+  JetCorrectorParameters p(fileName, jecName);
+  return new JetCorrectionUncertainty(p);
 }
 
 float uncFunc(JetCorrectionUncertainty* jCU, const reco::Candidate::LorentzVector& jet) {
@@ -50,8 +54,8 @@ class Tuple_Jet : public edm::EDProducer {
   void initGen();  void produceGen(edm::Event&, const Handle_t&, const Handle_t&);
 
   const edm::InputTag jetsTag, allJetsTag;
-  const std::string prefix,jecRecord;
-  const std::vector<std::string> btagNames;
+  const std::string prefix,jecRecord,juf;
+  const std::vector<std::string> btagNames, jecNames;
   const bool pfInfo, genInfo;
   JetResolution jer;
   TH1D dataMcResRatio;
@@ -63,7 +67,9 @@ Tuple_Jet(const edm::ParameterSet& cfg) :
   allJetsTag(cfg.getParameter<edm::InputTag>("allJetsTag")),
   prefix(cfg.getParameter<std::string>("prefix")),
   jecRecord(cfg.getParameter<std::string>("jecRecord")),
+  juf(cfg.getParameter<std::string>("jetUncertaintyFile")),
   btagNames(cfg.getParameter<std::vector<std::string> >("bTags")),
+  jecNames(cfg.getParameter<std::vector<std::string> >("jecNames")),
   pfInfo(cfg.getParameter<bool>("pfInfo")),
   genInfo(cfg.getParameter<bool>("genInfo")),
   jer(cfg.getParameter<std::string>("jetResolutionFile")),
@@ -74,7 +80,8 @@ Tuple_Jet(const edm::ParameterSet& cfg) :
 {
   produces <std::vector<LorentzV> > ( prefix + "P4"   );
   produces <std::vector<float> >    ( prefix + "JecFactor"   );
-  produces <std::vector<float> >    ( prefix + "JecUnc"      );
+  BOOST_FOREACH(const std::string& jecName, jecNames)
+    produces <std::vector<float> >    ( prefix + "JecUnc" + jecName    );
   produces <std::vector<float> >    ( prefix + "Area"        );
   produces <std::vector<float> >    ( prefix + "Resolution"  );
   produces <std::vector<float> >    ( prefix + "Charge"      );
@@ -103,7 +110,10 @@ produce(edm::Event& evt, const edm::EventSetup& setup) {
 
   std::auto_ptr<std::vector<LorentzV> >   p4   ( new std::vector<LorentzV>()  )  ;
   std::auto_ptr<std::vector<float> >  jecFactor( new std::vector<float>()  )  ;
-  std::auto_ptr<std::vector<float> >  jecUnc   ( new std::vector<float>()  )  ;
+  std::map<std::string, std::vector<float>* > jecUnc;
+  BOOST_FOREACH(const std::string& jecName, jecNames)
+    jecUnc[jecName] = new std::vector<float>();
+
   std::auto_ptr<std::vector<float> >  reso     ( new std::vector<float>()  )  ;
   std::auto_ptr<std::vector<float> >  area     ( new std::vector<float>()  )  ;
   std::auto_ptr<std::vector<float> >  charge   ( new std::vector<float>()  )  ;
@@ -114,11 +124,15 @@ produce(edm::Event& evt, const edm::EventSetup& setup) {
     btags[btag] = new std::vector<float>();
 
   if(jets.isValid()) {
-    JetCorrectionUncertainty* jCU = jetCorrUnc(setup, jecRecord);
+    std::map<std::string, JetCorrectionUncertainty*> jCU;
+    BOOST_FOREACH(const std::string& jecName, jecNames)
+      jCU[jecName] = jetCorrUnc(setup, jecRecord, juf, jecName);
+
     for(typename edm::View<T>::const_iterator jet = jets->begin(); jet!=jets->end(); jet++) {
       p4->push_back(LorentzV(jet->pt(),jet->eta(),jet->phi(),jet->mass()));
       jecFactor->push_back( jet->jecSetsAvailable() ? jet->energy() / jet->correctedJet("Uncorrected").energy() : 1.0 );
-      jecUnc->push_back(uncFunc(jCU, jet->p4()));
+      BOOST_FOREACH(const std::string& jecName, jecNames)
+	jecUnc[jecName]->push_back(uncFunc(jCU[jecName], jet->p4()));
       area->push_back(jet->jetArea());
       charge->push_back(jet->jetCharge());
       eta2mom->push_back(jet->etaetaMoment());
@@ -131,12 +145,15 @@ produce(edm::Event& evt, const edm::EventSetup& setup) {
       reso->push_back( jerEta->Eval( jet->pt() )  );
       delete jerEta;
     }
-    delete jCU;
+    BOOST_FOREACH(const std::string& jecName, jecNames)
+      delete jCU[jecName];
   }
 
   evt.put(      p4,   prefix + "P4"  );
   evt.put(jecFactor,  prefix + "JecFactor"   );
-  evt.put(  jecUnc,   prefix + "JecUnc"      );
+  BOOST_FOREACH(const std::string& jecName, jecNames)
+    evt.put(  std::auto_ptr<std::vector<float> >(jecUnc[jecName]),   prefix + "JecUnc" + jecName );
+
   evt.put(    reso,   prefix + "Resolution"  );
   evt.put(    area,   prefix + "Area"        );
   evt.put(  charge,   prefix + "Charge"      );
