@@ -96,17 +96,20 @@ class Tuple(object) :
         return self.empty + self.process.tupleMET
 
     def jet(self) :
+        jetJecFileName = 'Summer13_V5_DATA_UncertaintySources_AK5PFchs.txt'
+        jetJecFile = os.popen('find . | grep %s | head -1' % jetJecFileName).read().strip()
         jetResFile = '%s/src/CondFormats/JetMETObjects/data/Spring10_PtResolution_AK5PF.txt'%os.environ['CMSSW_RELEASE_BASE']
         self.process.tupleJet = cms.EDProducer("Tuple_PatJet",
                                                prefix = cms.string("jet"),
                                                jetsTag = tags("selectedPatJetsForAnalysis"),
                                                allJetsTag = tags("selectedPatJets"+self.options.postfix),
                                                jecRecord = cms.string("AK5PFchs"),
-                                               jecNames = cms.vstring([""]),
+                                               jecNames = cms.vstring([""]+self.availableJecUncertainties()),
                                                bTags = cms.vstring(self.options.btags),
                                                pfInfo = cms.bool(True),
                                                genInfo = cms.bool( not self.options.isData),
                                                jetResolutionFile = cms.string(jetResFile.split('/')[-1]),
+                                               jetUncertaintyFile = cms.string(jetJecFileName),
 
                                                # https://twiki.cern.ch/twiki/bin/view/CMS/JetResolution
                                                resolutionRatioBins = cms.vdouble(0.0, 0.5, 1.1, 1.7, 2.3, 5.0),
@@ -119,4 +122,49 @@ class Tuple(object) :
                                                                                  )
                                                )
         os.system("cp %s ."%jetResFile)
+        os.system("cp %s ."%jetJecFile)
         return self.empty + self.process.tupleJet
+
+
+    def availableJecUncertainties(self):
+        return ["AbsoluteStat",
+                "AbsoluteScale",
+                "AbsoluteFlavMap",
+                "AbsoluteMPFBias",
+                "HighPtExtra",
+                "SinglePionECAL",
+                "SinglePionHCAL",
+                "FlavorQCD",
+                "Time",
+                "RelativeJEREC1",
+                "RelativeJEREC2",
+                "RelativeJERHF",
+                "RelativePtBB",
+                "RelativePtEC1",
+                "RelativePtEC2",
+                "RelativePtHF",
+                "RelativeFSR",
+                "RelativeStatEC2",
+                "RelativeStatHF",
+                "PileUpDataMC",
+                "PileUpPtBB",
+                "PileUpPtEC",
+                "PileUpPtHF",
+                "PileUpBias",
+                "SubTotalPileUp",
+                "SubTotalRelative",
+                "SubTotalPt",
+                "SubTotalMC",
+                "Total",
+                "TotalNoFlavor",
+                "FlavorZJet",
+                "FlavorPhotonJet",
+                "FlavorPureGluon",
+                "FlavorPureQuark",
+                "FlavorPureCharm",
+                "FlavorPureBottom",
+                "CorrelationGroupMPFInSitu",
+                "CorrelationGroupIntercalibration",
+                "CorrelationGroupbJES",
+                "CorrelationGroupFlavor",
+                "CorrelationGroupUncorrelated"]

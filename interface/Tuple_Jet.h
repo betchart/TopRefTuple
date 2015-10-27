@@ -18,10 +18,14 @@
 #include "TH1D.h"
 
 
-JetCorrectionUncertainty* jetCorrUnc(const edm::EventSetup& setup, const std::string& jecRecord, const std::string& jecName) {
-  edm::ESHandle<JetCorrectorParametersCollection> JetCorParColl;
-  setup.get<JetCorrectionsRecord>().get(jecRecord,JetCorParColl);
-  return new JetCorrectionUncertainty((*JetCorParColl)[jecName==""?"Uncertainty":jecName]);
+JetCorrectionUncertainty* jetCorrUnc(const edm::EventSetup& setup, const std::string& jecRecord, const std::string fileName, const std::string& jecName) {
+  if(jecName=="") {
+    edm::ESHandle<JetCorrectorParametersCollection> JetCorParColl;
+    setup.get<JetCorrectionsRecord>().get(jecRecord,JetCorParColl);
+    return new JetCorrectionUncertainty((*JetCorParColl)["Uncertainty"]);
+  }
+  JetCorrectorParameters p(fileName, jecName);
+  return new JetCorrectionUncertainty(p);
 }
 
 float uncFunc(JetCorrectionUncertainty* jCU, const reco::Candidate::LorentzVector& jet) {
@@ -50,7 +54,7 @@ class Tuple_Jet : public edm::EDProducer {
   void initGen();  void produceGen(edm::Event&, const Handle_t&, const Handle_t&);
 
   const edm::InputTag jetsTag, allJetsTag;
-  const std::string prefix,jecRecord;
+  const std::string prefix,jecRecord,juf;
   const std::vector<std::string> btagNames, jecNames;
   const bool pfInfo, genInfo;
   JetResolution jer;
@@ -63,6 +67,7 @@ Tuple_Jet(const edm::ParameterSet& cfg) :
   allJetsTag(cfg.getParameter<edm::InputTag>("allJetsTag")),
   prefix(cfg.getParameter<std::string>("prefix")),
   jecRecord(cfg.getParameter<std::string>("jecRecord")),
+  juf(cfg.getParameter<std::string>("jetUncertaintyFile")),
   btagNames(cfg.getParameter<std::vector<std::string> >("bTags")),
   jecNames(cfg.getParameter<std::vector<std::string> >("jecNames")),
   pfInfo(cfg.getParameter<bool>("pfInfo")),
@@ -121,7 +126,7 @@ produce(edm::Event& evt, const edm::EventSetup& setup) {
   if(jets.isValid()) {
     std::map<std::string, JetCorrectionUncertainty*> jCU;
     BOOST_FOREACH(const std::string& jecName, jecNames)
-      jCU[jecName] = jetCorrUnc(setup, jecRecord, jecName);
+      jCU[jecName] = jetCorrUnc(setup, jecRecord, juf, jecName);
 
     for(typename edm::View<T>::const_iterator jet = jets->begin(); jet!=jets->end(); jet++) {
       p4->push_back(LorentzV(jet->pt(),jet->eta(),jet->phi(),jet->mass()));
